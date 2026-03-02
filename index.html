@@ -1,0 +1,1118 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8"/>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
+<title>FEABA Travels – Invoice Generator</title>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@600;700&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<style>
+  :root {
+    --gold: #C9A84C;
+    --gold-light: #E8C97A;
+    --gold-dark: #9A7A30;
+    --ink: #1A1208;
+    --ink-mid: #3D2E10;
+    --ink-soft: #7A6840;
+    --cream: #FAF6EF;
+    --cream-dark: #F0E9D8;
+    --cream-mid: #EDE3CE;
+    --white: #FFFFFF;
+    --red: #C0392B;
+    --green: #27AE60;
+    --shadow: 0 4px 32px rgba(26,18,8,0.12);
+    --shadow-lg: 0 12px 48px rgba(26,18,8,0.18);
+  }
+  *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+  html { scroll-behavior: smooth; }
+  body {
+    font-family: 'DM Sans', sans-serif;
+    background: var(--cream);
+    color: var(--ink);
+    min-height: 100vh;
+    font-size: 15px;
+  }
+
+  /* ── HEADER ── */
+  .app-header {
+    background: var(--ink);
+    padding: 18px 20px 16px;
+    display: flex; align-items: center; justify-content: space-between;
+    position: sticky; top: 0; z-index: 100;
+    border-bottom: 2px solid var(--gold);
+  }
+  .app-header .brand {
+    display: flex; align-items: center; gap: 10px;
+  }
+  .brand-icon {
+    width: 36px; height: 36px;
+    background: var(--gold);
+    border-radius: 8px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 18px;
+  }
+  .brand-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 18px; color: var(--cream);
+    letter-spacing: 0.3px;
+  }
+  .brand-name span { color: var(--gold); }
+  .header-badge {
+    background: var(--gold);
+    color: var(--ink);
+    font-size: 10px; font-weight: 600;
+    padding: 3px 8px; border-radius: 20px;
+    letter-spacing: 0.5px; text-transform: uppercase;
+  }
+
+  /* ── TABS ── */
+  .tabs {
+    display: flex;
+    background: var(--ink-mid);
+    position: sticky; top: 68px; z-index: 90;
+  }
+  .tab-btn {
+    flex: 1; padding: 13px; border: none;
+    background: transparent; color: var(--ink-soft);
+    font-family: 'DM Sans', sans-serif;
+    font-size: 13px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+    border-bottom: 3px solid transparent;
+    letter-spacing: 0.3px;
+  }
+  .tab-btn.active {
+    color: var(--gold);
+    border-bottom-color: var(--gold);
+    background: rgba(201,168,76,0.08);
+  }
+
+  /* ── PANELS ── */
+  .panel { display: none; padding: 20px 16px; }
+  .panel.active { display: block; }
+
+  /* ── CARDS ── */
+  .card {
+    background: var(--white);
+    border-radius: 14px;
+    padding: 18px;
+    margin-bottom: 14px;
+    box-shadow: 0 2px 12px rgba(26,18,8,0.06);
+    border: 1px solid var(--cream-mid);
+  }
+  .card-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 15px; color: var(--ink);
+    margin-bottom: 14px;
+    display: flex; align-items: center; gap: 8px;
+  }
+  .card-title .icon {
+    width: 28px; height: 28px;
+    background: var(--cream-dark);
+    border-radius: 7px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 14px;
+  }
+
+  /* ── FORM ELEMENTS ── */
+  .form-row { display: flex; gap: 10px; margin-bottom: 12px; }
+  .form-row.single { flex-direction: column; }
+  .form-group { flex: 1; display: flex; flex-direction: column; gap: 5px; }
+  label {
+    font-size: 11px; font-weight: 600;
+    color: var(--ink-soft); letter-spacing: 0.5px;
+    text-transform: uppercase;
+  }
+  input, select, textarea {
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; color: var(--ink);
+    background: var(--cream);
+    border: 1.5px solid var(--cream-mid);
+    border-radius: 9px; padding: 10px 13px;
+    outline: none; transition: all .2s; width: 100%;
+    -webkit-appearance: none;
+  }
+  input:focus, select:focus, textarea:focus {
+    border-color: var(--gold);
+    background: var(--white);
+    box-shadow: 0 0 0 3px rgba(201,168,76,0.15);
+  }
+  select { background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9A84C' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E"); background-repeat: no-repeat; background-position: right 12px center; padding-right: 32px; }
+  textarea { resize: vertical; min-height: 72px; }
+
+  /* ── INVOICE NUMBER ── */
+  .inv-num-row {
+    display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+    background: var(--cream); border-radius: 10px; padding: 10px 14px;
+    border: 1.5px dashed var(--gold-dark);
+  }
+  .inv-num-label { font-size: 11px; font-weight: 600; color: var(--ink-soft); letter-spacing: 0.5px; text-transform: uppercase; }
+  .inv-num-value { font-family: 'DM Mono', monospace; font-size: 14px; color: var(--gold-dark); font-weight: 500; flex: 1; }
+  .regen-btn {
+    background: var(--gold); color: var(--ink);
+    border: none; border-radius: 7px;
+    padding: 5px 10px; font-size: 11px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .regen-btn:hover { background: var(--gold-dark); color: var(--white); }
+
+  /* ── LINE ITEMS ── */
+  .line-item {
+    background: var(--cream);
+    border-radius: 11px; padding: 14px;
+    margin-bottom: 10px;
+    border: 1.5px solid var(--cream-mid);
+    position: relative; transition: all .2s;
+  }
+  .line-item:hover { border-color: var(--gold-dark); }
+  .line-item-header {
+    display: flex; justify-content: space-between;
+    align-items: center; margin-bottom: 10px;
+  }
+  .item-num {
+    width: 22px; height: 22px;
+    background: var(--gold);
+    border-radius: 6px; font-size: 11px;
+    font-weight: 700; color: var(--ink);
+    display: flex; align-items: center; justify-content: center;
+  }
+  .remove-btn {
+    background: none; border: none;
+    color: var(--red); cursor: pointer;
+    font-size: 18px; line-height: 1;
+    padding: 2px 5px; border-radius: 5px;
+    transition: background .2s;
+  }
+  .remove-btn:hover { background: #fde8e6; }
+  .item-name-input { margin-bottom: 8px; }
+  .item-desc-input { margin-bottom: 8px; font-size: 13px; }
+  .item-nums { display: flex; gap: 8px; }
+  .item-nums .form-group label { font-size: 10px; }
+
+  .add-item-btn {
+    width: 100%; padding: 12px;
+    border: 2px dashed var(--gold-dark);
+    border-radius: 11px; background: transparent;
+    color: var(--gold-dark); font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 500;
+    cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .add-item-btn:hover { background: rgba(201,168,76,0.08); border-color: var(--gold); color: var(--gold); }
+
+  /* ── TOTALS ── */
+  .totals-card {
+    background: var(--ink);
+    border-radius: 14px; padding: 18px;
+    margin-bottom: 14px; color: var(--cream);
+  }
+  .totals-row {
+    display: flex; justify-content: space-between;
+    align-items: center; padding: 7px 0;
+    border-bottom: 1px solid rgba(255,255,255,0.08);
+    font-size: 14px;
+  }
+  .totals-row:last-child { border-bottom: none; }
+  .totals-row.total-row {
+    padding-top: 12px; margin-top: 4px;
+    border-top: 1px solid var(--gold-dark);
+    border-bottom: none;
+  }
+  .totals-row.total-row .label { font-family: 'Playfair Display', serif; font-size: 16px; color: var(--cream); }
+  .totals-row.total-row .value { font-family: 'Playfair Display', serif; font-size: 20px; color: var(--gold); font-weight: 700; }
+  .totals-row .label { color: rgba(250,246,239,0.6); font-size: 13px; }
+  .totals-row .value { font-family: 'DM Mono', monospace; color: var(--cream); }
+  .words-row { margin-top: 12px; padding-top: 10px; border-top: 1px solid rgba(255,255,255,0.1); }
+  .words-label { font-size: 10px; color: rgba(250,246,239,0.4); text-transform: uppercase; letter-spacing: 0.5px; margin-bottom: 4px; }
+  .words-value { font-size: 13px; color: var(--gold-light); font-style: italic; }
+
+  /* ── TAX ── */
+  .tax-row { display: flex; gap: 8px; align-items: flex-end; margin-bottom: 12px; }
+
+  /* ── ACTIONS ── */
+  .action-row { display: flex; gap: 10px; margin-bottom: 20px; }
+  .btn-primary {
+    flex: 1; padding: 14px;
+    background: var(--gold);
+    color: var(--ink); border: none;
+    border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-primary:hover { background: var(--gold-dark); color: var(--white); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .btn-secondary {
+    padding: 14px 18px;
+    background: var(--ink);
+    color: var(--cream); border: none;
+    border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+    display: flex; align-items: center; justify-content: center; gap: 6px;
+  }
+  .btn-secondary:hover { background: var(--ink-mid); transform: translateY(-1px); }
+  .btn-outline {
+    flex: 1; padding: 14px;
+    background: transparent;
+    color: var(--ink); border: 2px solid var(--ink);
+    border-radius: 11px;
+    font-family: 'DM Sans', sans-serif;
+    font-size: 14px; font-weight: 600;
+    cursor: pointer; transition: all .2s;
+  }
+  .btn-outline:hover { background: var(--ink); color: var(--cream); }
+
+  /* ── PREVIEW PANEL ── */
+  .preview-wrapper {
+    background: #888;
+    border-radius: 14px;
+    padding: 16px;
+    margin-bottom: 14px;
+  }
+  .invoice-preview {
+    background: var(--white);
+    border-radius: 8px;
+    overflow: hidden;
+    box-shadow: var(--shadow-lg);
+    font-family: 'DM Sans', sans-serif;
+  }
+  .inv-header {
+    background: var(--ink);
+    padding: 24px;
+    display: flex; justify-content: space-between; align-items: flex-start;
+    flex-wrap: wrap; gap: 12px;
+  }
+  .inv-company { }
+  .inv-company-name {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px; color: var(--cream);
+    margin-bottom: 6px;
+  }
+  .inv-company-detail { font-size: 11px; color: rgba(250,246,239,0.55); line-height: 1.7; }
+  .inv-title-block { text-align: right; }
+  .inv-title { font-family: 'Playfair Display', serif; font-size: 22px; color: var(--gold); letter-spacing: 1px; }
+  .inv-num { font-family: 'DM Mono', monospace; font-size: 11px; color: rgba(250,246,239,0.5); margin-top: 4px; }
+  
+  .inv-meta {
+    background: var(--cream-dark);
+    padding: 16px 24px;
+    display: grid; grid-template-columns: 1fr 1fr;
+    gap: 8px;
+  }
+  .meta-item { }
+  .meta-label { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-soft); }
+  .meta-value { font-size: 13px; color: var(--ink); font-weight: 500; margin-top: 2px; }
+  
+  .inv-bill-section { padding: 16px 24px; display: flex; gap: 20px; flex-wrap: wrap; }
+  .bill-box { flex: 1; min-width: 140px; }
+  .bill-title { font-size: 9px; font-weight: 700; text-transform: uppercase; letter-spacing: 0.8px; color: var(--ink-soft); margin-bottom: 6px; }
+  .bill-name { font-weight: 600; font-size: 13px; margin-bottom: 2px; }
+  .bill-addr { font-size: 12px; color: var(--ink-soft); line-height: 1.6; }
+
+  .inv-items { padding: 0 24px 16px; }
+  .items-table { width: 100%; border-collapse: collapse; }
+  .items-table th {
+    background: var(--ink);
+    color: var(--gold-light);
+    font-size: 9px; font-weight: 700; text-transform: uppercase;
+    letter-spacing: 0.8px; padding: 8px 10px; text-align: left;
+  }
+  .items-table td { padding: 9px 10px; font-size: 12px; border-bottom: 1px solid var(--cream-mid); }
+  .items-table tr:last-child td { border-bottom: none; }
+  .items-table .item-name { font-weight: 600; font-size: 13px; }
+  .items-table .item-desc { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .items-table .num { font-family: 'DM Mono', monospace; text-align: right; }
+
+  .inv-footer-numbers {
+    padding: 0 24px 16px;
+    display: flex; flex-direction: column; align-items: flex-end;
+  }
+  .footer-row { display: flex; gap: 40px; padding: 5px 0; width: 240px; justify-content: space-between; font-size: 13px; }
+  .footer-row.total {
+    border-top: 2px solid var(--gold);
+    margin-top: 4px; padding-top: 10px;
+    font-weight: 700; font-size: 15px;
+  }
+  .footer-row.balance {
+    background: var(--gold);
+    padding: 8px 12px; border-radius: 8px;
+    margin-top: 6px; font-weight: 700; font-size: 14px; width: auto;
+  }
+
+  .inv-notes {
+    padding: 12px 24px 20px;
+    background: var(--cream-dark);
+    font-size: 11px; color: var(--ink-soft);
+  }
+  .notes-title { font-weight: 700; text-transform: uppercase; font-size: 9px; letter-spacing: 0.8px; margin-bottom: 5px; }
+
+  .inv-footer-bar {
+    background: var(--gold);
+    padding: 10px 24px;
+    display: flex; justify-content: space-between; align-items: center;
+  }
+  .inv-footer-bar span { font-size: 10px; font-weight: 600; color: var(--ink); }
+
+  /* ── TOAST ── */
+  .toast {
+    position: fixed; bottom: 24px; left: 50%; transform: translateX(-50%) translateY(80px);
+    background: var(--ink); color: var(--cream);
+    padding: 12px 22px; border-radius: 30px;
+    font-size: 13px; font-weight: 500;
+    box-shadow: var(--shadow-lg);
+    transition: transform .3s ease;
+    z-index: 9999; white-space: nowrap;
+    border: 1px solid var(--gold-dark);
+  }
+  .toast.show { transform: translateX(-50%) translateY(0); }
+
+  /* ── SAVED INVOICES ── */
+  .saved-invoice-card {
+    background: var(--white);
+    border-radius: 12px; padding: 14px;
+    margin-bottom: 10px;
+    display: flex; justify-content: space-between; align-items: center;
+    border: 1px solid var(--cream-mid);
+    cursor: pointer; transition: all .2s;
+  }
+  .saved-invoice-card:hover { border-color: var(--gold); transform: translateY(-1px); box-shadow: var(--shadow); }
+  .si-left .si-num { font-family: 'DM Mono', monospace; font-size: 12px; color: var(--gold-dark); }
+  .si-left .si-client { font-weight: 600; font-size: 14px; margin-top: 3px; }
+  .si-left .si-date { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .si-right .si-amount { font-family: 'Playfair Display', serif; font-size: 18px; color: var(--ink); font-weight: 700; }
+  .si-right .si-status { font-size: 10px; font-weight: 600; padding: 3px 8px; border-radius: 20px; text-align: center; margin-top: 4px; }
+  .status-paid { background: #d4edda; color: #155724; }
+  .status-due { background: #fff3cd; color: #856404; }
+
+  .empty-state { text-align: center; padding: 40px 20px; color: var(--ink-soft); }
+  .empty-state .emoji { font-size: 48px; display: block; margin-bottom: 12px; }
+  .empty-state p { font-size: 14px; }
+
+  /* ── SETTINGS ── */
+  .toggle-row {
+    display: flex; justify-content: space-between; align-items: center;
+    padding: 12px 0; border-bottom: 1px solid var(--cream-mid);
+  }
+  .toggle-row:last-child { border-bottom: none; }
+  .toggle-label { font-size: 14px; font-weight: 500; }
+  .toggle-desc { font-size: 11px; color: var(--ink-soft); margin-top: 2px; }
+  .toggle {
+    width: 46px; height: 26px;
+    background: var(--cream-mid); border-radius: 13px;
+    position: relative; cursor: pointer; transition: background .2s;
+    border: none; outline: none;
+    flex-shrink: 0;
+  }
+  .toggle.on { background: var(--gold); }
+  .toggle::after {
+    content: ''; position: absolute;
+    width: 20px; height: 20px; background: white;
+    border-radius: 50%; top: 3px; left: 3px;
+    transition: left .2s; box-shadow: 0 1px 4px rgba(0,0,0,0.2);
+  }
+  .toggle.on::after { left: 23px; }
+
+  .color-swatches { display: flex; gap: 8px; flex-wrap: wrap; }
+  .swatch {
+    width: 32px; height: 32px; border-radius: 8px;
+    cursor: pointer; border: 3px solid transparent; transition: all .2s;
+  }
+  .swatch.selected { border-color: var(--ink); transform: scale(1.1); }
+
+  /* ── SCROLL BAR ── */
+  ::-webkit-scrollbar { width: 4px; }
+  ::-webkit-scrollbar-track { background: var(--cream); }
+  ::-webkit-scrollbar-thumb { background: var(--cream-mid); border-radius: 2px; }
+
+  @media (max-width: 400px) {
+    .form-row { flex-direction: column; }
+    .inv-meta { grid-template-columns: 1fr; }
+  }
+
+  /* loading spinner */
+  .spinner { display: inline-block; width: 16px; height: 16px; border: 2px solid rgba(255,255,255,.3); border-radius: 50%; border-top-color: #fff; animation: spin .6s linear infinite; }
+  @keyframes spin { to { transform: rotate(360deg); } }
+</style>
+</head>
+<body>
+
+<header class="app-header">
+  <div class="brand">
+    <div class="brand-icon">🚖</div>
+    <div class="brand-name">FEABA <span>Travels</span></div>
+  </div>
+  <div class="header-badge">Invoice Pro</div>
+</header>
+
+<div class="tabs">
+  <button class="tab-btn active" onclick="switchTab('form')">✏️ Create</button>
+  <button class="tab-btn" onclick="switchTab('preview')">👁 Preview</button>
+  <button class="tab-btn" onclick="switchTab('saved')">📁 Saved</button>
+  <button class="tab-btn" onclick="switchTab('settings')">⚙️ Settings</button>
+</div>
+
+<!-- ══════════ FORM PANEL ══════════ -->
+<div class="panel active" id="panel-form">
+
+  <!-- Invoice Info -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📋</span> Invoice Info</div>
+    <div class="inv-num-row">
+      <span class="inv-num-label">Invoice #</span>
+      <span class="inv-num-value" id="inv-num-display">FEABA0000000</span>
+      <button class="regen-btn" onclick="regenInvNum()">↻ New</button>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Invoice Date</label>
+        <input type="date" id="inv-date"/>
+      </div>
+      <div class="form-group">
+        <label>Due Date</label>
+        <input type="date" id="due-date"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Terms</label>
+        <select id="inv-terms">
+          <option>Due on Receipt</option>
+          <option>Net 7</option>
+          <option>Net 15</option>
+          <option>Net 30</option>
+          <option>Net 60</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Trip Details -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🚗</span> Trip Details</div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Cab Type</label>
+        <select id="cab-type">
+          <option>Etios</option>
+          <option>Swift Dzire</option>
+          <option>Innova</option>
+          <option>Innova Crysta</option>
+          <option>Ertiga</option>
+          <option>Tempo Traveller</option>
+          <option>Mini Bus</option>
+          <option>Bus</option>
+          <option>Auto</option>
+          <option>Other</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Driver / Vehicle No.</label>
+        <input type="text" id="driver-info" placeholder="e.g. Sebastian KA64 4114"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Trip From</label>
+        <input type="text" id="trip-from" placeholder="Pickup location"/>
+      </div>
+      <div class="form-group">
+        <label>Trip To</label>
+        <input type="text" id="trip-to" placeholder="Drop location"/>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Journey Date</label>
+        <input type="date" id="journey-date"/>
+      </div>
+      <div class="form-group">
+        <label>Kilometers</label>
+        <input type="number" id="km" placeholder="0" min="0"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Bill To -->
+  <div class="card">
+    <div class="card-title"><span class="icon">👤</span> Bill To</div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Company / Person Name</label>
+        <input type="text" id="client-name" placeholder="Client name"/>
+      </div>
+    </div>
+    <div class="form-row single">
+      <div class="form-group">
+        <label>Address</label>
+        <textarea id="client-addr" placeholder="Street, City, State, PIN"></textarea>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="client-phone" placeholder="+91 XXXXX XXXXX"/>
+      </div>
+      <div class="form-group">
+        <label>GSTIN (optional)</label>
+        <input type="text" id="client-gstin" placeholder="22XXXXX1234X1Z5"/>
+      </div>
+    </div>
+  </div>
+
+  <!-- Line Items -->
+  <div class="card">
+    <div class="card-title"><span class="icon">🧾</span> Line Items</div>
+    <div id="line-items-container"></div>
+    <button class="add-item-btn" onclick="addLineItem()">+ Add Line Item</button>
+  </div>
+
+  <!-- Tax & Discount -->
+  <div class="card">
+    <div class="card-title"><span class="icon">💰</span> Tax & Discount</div>
+    <div class="tax-row">
+      <div class="form-group">
+        <label>Discount (%)</label>
+        <input type="number" id="discount" placeholder="0" min="0" max="100" value="0" oninput="calcTotals()"/>
+      </div>
+      <div class="form-group">
+        <label>GST (%)</label>
+        <select id="gst-rate" onchange="calcTotals()">
+          <option value="0">No GST</option>
+          <option value="5">5% GST</option>
+          <option value="12">12% GST</option>
+          <option value="18" selected>18% GST</option>
+          <option value="28">28% GST</option>
+        </select>
+      </div>
+    </div>
+  </div>
+
+  <!-- Totals -->
+  <div class="totals-card">
+    <div class="totals-row">
+      <span class="label">Sub Total</span>
+      <span class="value" id="t-subtotal">₹0.00</span>
+    </div>
+    <div class="totals-row" id="discount-row" style="display:none">
+      <span class="label">Discount</span>
+      <span class="value" style="color:#f7b731" id="t-discount">-₹0.00</span>
+    </div>
+    <div class="totals-row" id="gst-row" style="display:none">
+      <span class="label" id="gst-label">GST (18%)</span>
+      <span class="value" id="t-gst">₹0.00</span>
+    </div>
+    <div class="totals-row total-row">
+      <span class="label">Total</span>
+      <span class="value" id="t-total">₹0.00</span>
+    </div>
+    <div class="words-row">
+      <div class="words-label">Amount in Words</div>
+      <div class="words-value" id="t-words">—</div>
+    </div>
+  </div>
+
+  <!-- Notes -->
+  <div class="card">
+    <div class="card-title"><span class="icon">📝</span> Notes</div>
+    <textarea id="inv-notes" placeholder="Additional notes, terms, bank details...">Thanks for your business.</textarea>
+  </div>
+
+  <!-- Actions -->
+  <div class="action-row">
+    <button class="btn-primary" onclick="switchTab('preview'); buildPreview()">👁 Preview</button>
+    <button class="btn-secondary" onclick="saveInvoice()">💾 Save</button>
+  </div>
+  <div class="action-row">
+    <button class="btn-primary" onclick="downloadPDF()">⬇ Download PDF</button>
+    <button class="btn-outline" onclick="resetForm()">🗑 Clear</button>
+  </div>
+</div>
+
+<!-- ══════════ PREVIEW PANEL ══════════ -->
+<div class="panel" id="panel-preview">
+  <div class="preview-wrapper">
+    <div class="invoice-preview" id="invoice-doc">
+
+      <div class="inv-header">
+        <div class="inv-company">
+          <div class="inv-company-name">FEABA TRAVELS</div>
+          <div class="inv-company-detail">
+            Bommanahalli, Bengaluru Karnataka<br/>
+            📞 98801 59085 | ✉ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="f0969591929184829186959c83b0979d91999cde939f9d">[email&#160;protected]</a>
+          </div>
+        </div>
+        <div class="inv-title-block">
+          <div class="inv-title">TAX INVOICE</div>
+          <div class="inv-num" id="p-invnum">#: FEABA0000000</div>
+        </div>
+      </div>
+
+      <div class="inv-meta">
+        <div class="meta-item">
+          <div class="meta-label">Invoice Date</div>
+          <div class="meta-value" id="p-invdate">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Due Date</div>
+          <div class="meta-value" id="p-duedate">—</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Terms</div>
+          <div class="meta-value" id="p-terms">Due on Receipt</div>
+        </div>
+        <div class="meta-item">
+          <div class="meta-label">Cab / Vehicle</div>
+          <div class="meta-value" id="p-cab">—</div>
+        </div>
+        <div class="meta-item" id="p-trip-block" style="display:none;">
+          <div class="meta-label">Journey</div>
+          <div class="meta-value" id="p-trip">—</div>
+        </div>
+        <div class="meta-item" id="p-km-block" style="display:none;">
+          <div class="meta-label">Distance</div>
+          <div class="meta-value" id="p-km">—</div>
+        </div>
+      </div>
+
+      <div class="inv-bill-section">
+        <div class="bill-box">
+          <div class="bill-title">Bill To</div>
+          <div class="bill-name" id="p-client-name">—</div>
+          <div class="bill-addr" id="p-client-addr"></div>
+        </div>
+      </div>
+
+      <div class="inv-items">
+        <table class="items-table">
+          <thead>
+            <tr>
+              <th>#</th>
+              <th>Item & Description</th>
+              <th style="text-align:right">Rate</th>
+              <th style="text-align:right">Qty</th>
+              <th style="text-align:right">Amount</th>
+            </tr>
+          </thead>
+          <tbody id="p-items-body">
+          </tbody>
+        </table>
+      </div>
+
+      <div class="inv-footer-numbers">
+        <div class="footer-row"><span>Sub Total</span><span id="p-subtotal">₹0.00</span></div>
+        <div class="footer-row" id="p-discount-row" style="display:none;"><span id="p-discount-label">Discount</span><span id="p-discount-val">—</span></div>
+        <div class="footer-row" id="p-gst-row" style="display:none;"><span id="p-gst-label">GST</span><span id="p-gst-val">—</span></div>
+        <div class="footer-row total"><span>Total</span><span id="p-total">₹0.00</span></div>
+        <div class="footer-row balance"><span>Balance Due</span><span id="p-balance">₹0.00</span></div>
+      </div>
+
+      <div class="inv-notes">
+        <div class="notes-title">Notes</div>
+        <div id="p-notes">Thanks for your business.</div>
+      </div>
+
+      <div class="inv-footer-bar">
+        <span>FEABA Travels — Trusted Ride Partner</span>
+        <span id="p-footernum">#FEABA0000000</span>
+      </div>
+
+    </div>
+  </div>
+
+  <div class="action-row">
+    <button class="btn-primary" onclick="downloadPDF()">⬇ Download PDF</button>
+    <button class="btn-secondary" onclick="switchTab('form')">✏️ Edit</button>
+  </div>
+</div>
+
+<!-- ══════════ SAVED PANEL ══════════ -->
+<div class="panel" id="panel-saved">
+  <div id="saved-list"></div>
+</div>
+
+<!-- ══════════ SETTINGS PANEL ══════════ -->
+<div class="panel" id="panel-settings">
+  <div class="card">
+    <div class="card-title"><span class="icon">🏢</span> Company Info</div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Company Name</label>
+      <input type="text" id="s-company" value="FEABA TRAVELS"/>
+    </div>
+    <div class="form-group" style="margin-bottom:12px">
+      <label>Address</label>
+      <textarea id="s-addr">Bommanahalli, Bengaluru Karnataka</textarea>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Phone</label>
+        <input type="tel" id="s-phone" value="98801 59085"/>
+      </div>
+      <div class="form-group">
+        <label>Email</label>
+        <input type="email" id="s-email" value="feabatravels@gmail.com"/>
+      </div>
+    </div>
+    <div class="form-group" style="margin-top:8px">
+      <label>GSTIN</label>
+      <input type="text" id="s-gstin" placeholder="Enter your GSTIN"/>
+    </div>
+    <button class="btn-primary" style="margin-top:14px;width:100%" onclick="saveSettings()">Save Settings</button>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">🎨</span> Theme Color</div>
+    <div class="color-swatches">
+      <div class="swatch selected" style="background:#C9A84C" onclick="setTheme('#C9A84C','#9A7A30')"></div>
+      <div class="swatch" style="background:#2C7BE5" onclick="setTheme('#2C7BE5','#1a5cb8')"></div>
+      <div class="swatch" style="background:#27AE60" onclick="setTheme('#27AE60','#1e8449')"></div>
+      <div class="swatch" style="background:#8E44AD" onclick="setTheme('#8E44AD','#6c3483')"></div>
+      <div class="swatch" style="background:#E74C3C" onclick="setTheme('#E74C3C','#c0392b')"></div>
+      <div class="swatch" style="background:#16A085" onclick="setTheme('#16A085','#0e7a63')"></div>
+    </div>
+  </div>
+
+  <div class="card">
+    <div class="card-title"><span class="icon">⚙️</span> Preferences</div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Auto-save invoices</div>
+        <div class="toggle-desc">Save every invoice to local storage</div>
+      </div>
+      <button class="toggle on" id="toggle-autosave" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Show GST by default</div>
+        <div class="toggle-desc">Pre-select 18% GST on new invoices</div>
+      </div>
+      <button class="toggle on" id="toggle-gst" onclick="this.classList.toggle('on')"></button>
+    </div>
+    <div class="toggle-row">
+      <div>
+        <div class="toggle-label">Dark invoice theme</div>
+        <div class="toggle-desc">Use dark header on invoice preview</div>
+      </div>
+      <button class="toggle on" id="toggle-dark" onclick="this.classList.toggle('on')"></button>
+    </div>
+  </div>
+</div>
+
+<div class="toast" id="toast"></div>
+
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
+// ─── State ───
+let lineItems = [];
+let savedInvoices = JSON.parse(localStorage.getItem('feaba_invoices') || '[]');
+
+// ─── Init ───
+window.onload = () => {
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('inv-date').value = today;
+  const due = new Date(); due.setDate(due.getDate() + 7);
+  document.getElementById('due-date').value = due.toISOString().split('T')[0];
+  regenInvNum();
+  addLineItem();
+  renderSaved();
+};
+
+// ─── Tabs ───
+function switchTab(name) {
+  document.querySelectorAll('.panel').forEach(p => p.classList.remove('active'));
+  document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('panel-' + name).classList.add('active');
+  const tabs = ['form','preview','saved','settings'];
+  document.querySelectorAll('.tab-btn')[tabs.indexOf(name)].classList.add('active');
+  if (name === 'preview') buildPreview();
+  if (name === 'saved') renderSaved();
+}
+
+// ─── Invoice Number ───
+function regenInvNum() {
+  const num = 'FEABA' + Math.floor(Math.random() * 9000000 + 1000000);
+  document.getElementById('inv-num-display').textContent = num;
+}
+
+// ─── Line Items ───
+function addLineItem() {
+  const id = Date.now();
+  lineItems.push({ id, name: '', desc: '', rate: '', qty: 1, amount: 0 });
+  renderLineItems();
+}
+
+function removeLineItem(id) {
+  lineItems = lineItems.filter(i => i.id !== id);
+  renderLineItems();
+  calcTotals();
+}
+
+function renderLineItems() {
+  const cont = document.getElementById('line-items-container');
+  cont.innerHTML = lineItems.map((item, idx) => `
+    <div class="line-item" id="li-${item.id}">
+      <div class="line-item-header">
+        <span class="item-num">${idx + 1}</span>
+        ${lineItems.length > 1 ? `<button class="remove-btn" onclick="removeLineItem(${item.id})">×</button>` : ''}
+      </div>
+      <input class="item-name-input" type="text" placeholder="Item name" value="${item.name}"
+        oninput="updateItem(${item.id}, 'name', this.value)" style="margin-bottom:8px;display:block;width:100%;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--white);border:1.5px solid var(--cream-mid);border-radius:9px;padding:10px 13px;outline:none;"/>
+      <input type="text" placeholder="Description (optional)" value="${item.desc}"
+        oninput="updateItem(${item.id}, 'desc', this.value)" style="margin-bottom:8px;display:block;width:100%;font-family:'DM Sans',sans-serif;font-size:13px;color:var(--ink-soft);background:var(--cream);border:1.5px solid var(--cream-mid);border-radius:9px;padding:8px 13px;outline:none;"/>
+      <div class="item-nums">
+        <div class="form-group">
+          <label>Rate (₹)</label>
+          <input type="number" placeholder="0.00" value="${item.rate}" min="0" step="0.01"
+            oninput="updateItem(${item.id}, 'rate', this.value)" style="font-family:'DM Mono',monospace;"/>
+        </div>
+        <div class="form-group">
+          <label>Qty</label>
+          <input type="number" placeholder="1" value="${item.qty}" min="1"
+            oninput="updateItem(${item.id}, 'qty', this.value)"/>
+        </div>
+        <div class="form-group">
+          <label>Amount (₹)</label>
+          <input type="number" readonly value="${item.amount.toFixed(2)}" style="background:var(--cream-dark);font-family:'DM Mono',monospace;color:var(--gold-dark);font-weight:600;"/>
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function updateItem(id, field, val) {
+  const item = lineItems.find(i => i.id === id);
+  if (!item) return;
+  item[field] = val;
+  if (field === 'rate' || field === 'qty') {
+    item.amount = (parseFloat(item.rate) || 0) * (parseFloat(item.qty) || 0);
+    // update amount field visually
+    const el = document.querySelector(`#li-${id} input[readonly]`);
+    if (el) el.value = item.amount.toFixed(2);
+  }
+  calcTotals();
+}
+
+// ─── Totals ───
+function calcTotals() {
+  const subTotal = lineItems.reduce((s, i) => s + i.amount, 0);
+  const discPct = parseFloat(document.getElementById('discount').value) || 0;
+  const gstPct = parseFloat(document.getElementById('gst-rate').value) || 0;
+
+  const discAmt = subTotal * discPct / 100;
+  const afterDisc = subTotal - discAmt;
+  const gstAmt = afterDisc * gstPct / 100;
+  const total = afterDisc + gstAmt;
+
+  document.getElementById('t-subtotal').textContent = fmt(subTotal);
+  document.getElementById('t-total').textContent = fmt(total);
+  document.getElementById('t-words').textContent = total > 0 ? 'Rupees ' + numToWords(Math.round(total)) + ' Only' : '—';
+
+  const discRow = document.getElementById('discount-row');
+  const gstRow = document.getElementById('gst-row');
+  if (discPct > 0) { discRow.style.display = 'flex'; document.getElementById('t-discount').textContent = '-' + fmt(discAmt); }
+  else discRow.style.display = 'none';
+  if (gstPct > 0) { gstRow.style.display = 'flex'; document.getElementById('gst-label').textContent = `GST (${gstPct}%)`; document.getElementById('t-gst').textContent = fmt(gstAmt); }
+  else gstRow.style.display = 'none';
+}
+
+function fmt(n) { return '₹' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ','); }
+
+// ─── Build Preview ───
+function buildPreview() {
+  const invNum = document.getElementById('inv-num-display').textContent;
+  document.getElementById('p-invnum').textContent = '#: ' + invNum;
+  document.getElementById('p-footernum').textContent = '#' + invNum;
+  document.getElementById('p-invdate').textContent = fmtDate(document.getElementById('inv-date').value) || '—';
+  document.getElementById('p-duedate').textContent = fmtDate(document.getElementById('due-date').value) || '—';
+  document.getElementById('p-terms').textContent = document.getElementById('inv-terms').value;
+  document.getElementById('p-cab').textContent = document.getElementById('cab-info').value || document.getElementById('cab-type').value;
+
+  const from = document.getElementById('trip-from').value;
+  const to = document.getElementById('trip-to').value;
+  const km = document.getElementById('km').value;
+  const jdate = document.getElementById('journey-date').value;
+  if (from || to) {
+    document.getElementById('p-trip-block').style.display = 'block';
+    document.getElementById('p-trip').textContent = [from, to].filter(Boolean).join(' → ') + (jdate ? ' (' + fmtDate(jdate) + ')' : '');
+  }
+  if (km) {
+    document.getElementById('p-km-block').style.display = 'block';
+    document.getElementById('p-km').textContent = km + ' km';
+  }
+
+  const cname = document.getElementById('client-name').value;
+  document.getElementById('p-client-name').textContent = cname || '—';
+  const addr = document.getElementById('client-addr').value;
+  document.getElementById('p-client-addr').innerHTML = addr.split('\n').join('<br/>');
+
+  // items
+  const tbody = document.getElementById('p-items-body');
+  tbody.innerHTML = lineItems.map((item, i) => `
+    <tr>
+      <td>${i+1}</td>
+      <td>
+        <div class="item-name">${item.name || 'Item'}</div>
+        ${item.desc ? `<div class="item-desc">${item.desc}</div>` : ''}
+      </td>
+      <td class="num">₹${parseFloat(item.rate||0).toFixed(2)}</td>
+      <td class="num">${item.qty}</td>
+      <td class="num">₹${item.amount.toFixed(2)}</td>
+    </tr>
+  `).join('');
+
+  const subTotal = lineItems.reduce((s, i) => s + i.amount, 0);
+  const discPct = parseFloat(document.getElementById('discount').value) || 0;
+  const gstPct = parseFloat(document.getElementById('gst-rate').value) || 0;
+  const discAmt = subTotal * discPct / 100;
+  const afterDisc = subTotal - discAmt;
+  const gstAmt = afterDisc * gstPct / 100;
+  const total = afterDisc + gstAmt;
+
+  document.getElementById('p-subtotal').textContent = fmt(subTotal);
+  document.getElementById('p-total').textContent = fmt(total);
+  document.getElementById('p-balance').textContent = fmt(total);
+
+  if (discPct > 0) { document.getElementById('p-discount-row').style.display = 'flex'; document.getElementById('p-discount-label').textContent = `Discount (${discPct}%)`; document.getElementById('p-discount-val').textContent = '-' + fmt(discAmt); }
+  else document.getElementById('p-discount-row').style.display = 'none';
+  if (gstPct > 0) { document.getElementById('p-gst-row').style.display = 'flex'; document.getElementById('p-gst-label').textContent = `GST (${gstPct}%)`; document.getElementById('p-gst-val').textContent = fmt(gstAmt); }
+  else document.getElementById('p-gst-row').style.display = 'none';
+
+  document.getElementById('p-notes').textContent = document.getElementById('inv-notes').value;
+}
+
+// fix: get driver info field
+document.addEventListener('DOMContentLoaded', () => {});
+
+// helper - format date
+function fmtDate(str) {
+  if (!str) return '';
+  const d = new Date(str + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day: '2-digit', month: 'short', year: 'numeric' });
+}
+
+// ─── PDF Download ───
+function downloadPDF() {
+  buildPreview();
+  const el = document.getElementById('invoice-doc');
+  const invNum = document.getElementById('inv-num-display').textContent;
+  const opt = {
+    margin: 0,
+    filename: invNum + '.pdf',
+    image: { type: 'jpeg', quality: 0.98 },
+    html2canvas: { scale: 2, useCORS: true },
+    jsPDF: { unit: 'mm', format: 'a4', orientation: 'portrait' }
+  };
+  showToast('⬇ Generating PDF…');
+  html2pdf().set(opt).from(el).save().then(() => showToast('✅ PDF downloaded!'));
+}
+
+// ─── Save Invoice ───
+function saveInvoice() {
+  const subTotal = lineItems.reduce((s, i) => s + i.amount, 0);
+  const discPct = parseFloat(document.getElementById('discount').value) || 0;
+  const gstPct = parseFloat(document.getElementById('gst-rate').value) || 0;
+  const discAmt = subTotal * discPct / 100;
+  const afterDisc = subTotal - discAmt;
+  const gstAmt = afterDisc * gstPct / 100;
+  const total = afterDisc + gstAmt;
+
+  const inv = {
+    id: Date.now(),
+    invNum: document.getElementById('inv-num-display').textContent,
+    client: document.getElementById('client-name').value || 'Unknown',
+    date: document.getElementById('inv-date').value,
+    total,
+    status: 'due'
+  };
+  savedInvoices.unshift(inv);
+  localStorage.setItem('feaba_invoices', JSON.stringify(savedInvoices));
+  showToast('💾 Invoice saved!');
+}
+
+// ─── Render Saved ───
+function renderSaved() {
+  const el = document.getElementById('saved-list');
+  if (!savedInvoices.length) {
+    el.innerHTML = `<div class="empty-state"><span class="emoji">📂</span><p>No saved invoices yet.<br/>Create and save an invoice to see it here.</p></div>`;
+    return;
+  }
+  el.innerHTML = savedInvoices.map(inv => `
+    <div class="saved-invoice-card">
+      <div class="si-left">
+        <div class="si-num">${inv.invNum}</div>
+        <div class="si-client">${inv.client}</div>
+        <div class="si-date">${fmtDate(inv.date)}</div>
+      </div>
+      <div class="si-right">
+        <div class="si-amount">${fmt(inv.total)}</div>
+        <div class="si-status ${inv.status === 'paid' ? 'status-paid' : 'status-due'}"
+          onclick="toggleStatus(${inv.id}, event)">
+          ${inv.status === 'paid' ? '✅ Paid' : '⏳ Due'}
+        </div>
+      </div>
+    </div>
+  `).join('');
+}
+
+function toggleStatus(id, e) {
+  e.stopPropagation();
+  const inv = savedInvoices.find(i => i.id === id);
+  if (inv) { inv.status = inv.status === 'paid' ? 'due' : 'paid'; localStorage.setItem('feaba_invoices', JSON.stringify(savedInvoices)); renderSaved(); }
+}
+
+// ─── Reset ───
+function resetForm() {
+  if (!confirm('Clear all form data?')) return;
+  lineItems = [];
+  addLineItem();
+  ['client-name','client-addr','client-phone','client-gstin','inv-notes','trip-from','trip-to','km'].forEach(id => { const el = document.getElementById(id); if (el) el.value = id === 'inv-notes' ? 'Thanks for your business.' : ''; });
+  document.getElementById('discount').value = 0;
+  document.getElementById('gst-rate').value = 18;
+  regenInvNum();
+  calcTotals();
+  showToast('🗑 Form cleared');
+}
+
+// ─── Settings ───
+function saveSettings() { showToast('✅ Settings saved!'); }
+function setTheme(gold, dark) {
+  document.documentElement.style.setProperty('--gold', gold);
+  document.documentElement.style.setProperty('--gold-dark', dark);
+  document.querySelectorAll('.swatch').forEach(s => s.classList.remove('selected'));
+  event.target.classList.add('selected');
+  showToast('🎨 Theme updated!');
+}
+
+// ─── Toast ───
+function showToast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.classList.add('show');
+  setTimeout(() => t.classList.remove('show'), 2500);
+}
+
+// ─── Number to Words ───
+function numToWords(n) {
+  if (n === 0) return 'Zero';
+  const ones = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const tens = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function h(n) {
+    if (n < 20) return ones[n];
+    if (n < 100) return tens[Math.floor(n/10)] + (n%10 ? ' ' + ones[n%10] : '');
+    return ones[Math.floor(n/100)] + ' Hundred' + (n%100 ? ' ' + h(n%100) : '');
+  }
+  let result = '';
+  if (n >= 10000000) { result += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000; }
+  if (n >= 100000) { result += h(Math.floor(n/100000)) + ' Lakh '; n %= 100000; }
+  if (n >= 1000) { result += h(Math.floor(n/1000)) + ' Thousand '; n %= 1000; }
+  if (n > 0) result += h(n);
+  return result.trim();
+}
+
+// add missing cab-info element alias
+document.querySelector('#cab-type').id = 'cab-type';
+// patch buildPreview to use cab-type
+const origBuild = buildPreview;
+window.buildPreview = function() {
+  const el = document.getElementById('driver-info');
+  const cabType = document.getElementById('cab-type').value;
+  const driverInfo = el
