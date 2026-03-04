@@ -979,8 +979,6 @@ input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
 
 <!-- ═══════════ SCRIPT ═══════════ -->
 <script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
-'use strict';
-
 /* ── State ── */
 let items = [];
 let saved = JSON.parse(localStorage.getItem('feaba_v3') || '[]');
@@ -1498,4 +1496,34 @@ function n2w(n) {
       o[Math.floor(x/100)] + ' Hundred' + (x%100 ? ' '+h(x%100) : '');
   }
   let r = '';
-  if (n >= 10000000) { r += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000
+  if (n >= 10000000) { r += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000; }
+  if (n >= 100000)   { r += h(Math.floor(n/100000)) + ' Lakh '; n %= 100000; }
+  if (n >= 1000)     { r += h(Math.floor(n/1000)) + ' Thousand '; n %= 1000; }
+  if (n > 0) r += h(n);
+  return r.trim();
+}
+
+/* ── Expose all onclick functions to global window scope ── */
+window.doLogin        = doLogin;
+window.skipLogin      = skipLogin;
+window.showLogin      = showLogin;
+window.goTab          = goTab;
+window.goPreview      = goPreview;
+window.regenNum       = regenNum;
+window.addItem        = addItem;
+window.removeItem     = removeItem;
+window.upd            = upd;
+window.calcTotals     = calcTotals;
+window.dlPDF          = dlPDF;
+window.shareWhatsApp  = shareWhatsApp;
+window.shareViaWhatsApp = shareViaWhatsApp;
+window.triggerDownload = triggerDownload;
+window.closePdfModal  = closePdfModal;
+window.saveInv        = saveInv;
+window.toggleSt       = toggleSt;
+window.clearForm      = clearForm;
+window.saveSettings   = saveSettings;
+window.setColor       = setColor;
+</script>
+</body>
+</html>
