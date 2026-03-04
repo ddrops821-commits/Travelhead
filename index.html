@@ -412,38 +412,40 @@ input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
 
 /* ═══════════════════════════════════════════
    PDF INVOICE — A4 LANDSCAPE 297×210mm
-   Rendered at 3× then scaled → crisp print
+   B&W PRINT FRIENDLY — solid blacks + greys
+   No gradients · No gold · Prints crisp
 ═══════════════════════════════════════════ */
 #invoice-doc{
-  width:1050px; /* pixel equiv of 277mm at 96dpi (with margins) */
+  width:1050px;
   min-height:680px;
   background:#FFFFFF;
   font-family:'DM Sans',sans-serif;
-  color:#1A1208;font-size:11pt;
+  color:#111111;font-size:11pt;
   display:flex;flex-direction:column;
   position:relative;
-  border:1px solid #e0d8c8;/* visible in preview only */
+  border:1px solid #CCCCCC;
 }
 
-/* TOP HEADER */
+/* TOP HEADER — solid black, white text */
 #invoice-doc .ih-top{
-  background:#15100A;
+  background:#111111;
   display:flex;justify-content:space-between;align-items:flex-start;
   padding:20px 28px 17px;
 }
 #invoice-doc .ih-brand{display:flex;align-items:flex-start;gap:14px}
 #invoice-doc .ih-logo{
   width:48px;height:48px;
-  background:linear-gradient(135deg,#C9A84C,#E8C97A);
+  background:#FFFFFF;
   border-radius:12px;display:flex;align-items:center;justify-content:center;
   font-size:22px;flex-shrink:0;
+  border:2px solid #444444;
 }
 #invoice-doc .ih-co-name{
   font-family:'Cormorant Garamond',serif;
-  font-size:22pt;color:#C9A84C;font-weight:600;line-height:1.1;
+  font-size:22pt;color:#FFFFFF;font-weight:700;line-height:1.1;
 }
 #invoice-doc .ih-co-sub{
-  font-size:7.5pt;color:rgba(250,246,239,.55);
+  font-size:7.5pt;color:#BBBBBB;
   margin-top:5px;line-height:1.9;
 }
 #invoice-doc .ih-right{text-align:right}
@@ -453,124 +455,130 @@ input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
 }
 #invoice-doc .ih-num{
   font-family:'JetBrains Mono',monospace;
-  font-size:8pt;color:#C9A84C;margin-top:6px;
+  font-size:8pt;color:#CCCCCC;margin-top:6px;
 }
-#invoice-doc .ih-num b{font-size:10pt}
+#invoice-doc .ih-num b{font-size:10pt;color:#FFFFFF}
 
-/* GOLD SEPARATOR */
+/* SEPARATOR — solid black rule */
 #invoice-doc .ih-sep{
   height:4px;
-  background:linear-gradient(90deg,#9A7A30,#C9A84C,#E8C97A,#C9A84C,#9A7A30);
+  background:#111111;
 }
 
-/* META STRIP */
+/* META STRIP — light grey bg, dark borders */
 #invoice-doc .ih-meta{
-  background:#F0E9D8;
+  background:#F2F2F2;
   display:grid;grid-template-columns:repeat(5,1fr);
-  border-bottom:1px solid #E0D4BB;
+  border-bottom:1.5px solid #CCCCCC;
 }
-#invoice-doc .ih-mi{padding:10px 16px;border-right:1px solid #E0D4BB}
+#invoice-doc .ih-mi{padding:10px 16px;border-right:1px solid #CCCCCC}
 #invoice-doc .ih-mi:last-child{border-right:none}
 #invoice-doc .ml{
   font-size:6.5pt;font-weight:700;text-transform:uppercase;
-  letter-spacing:.9px;color:#7A6840;margin-bottom:3px;
+  letter-spacing:.9px;color:#555555;margin-bottom:3px;
 }
-#invoice-doc .mv{font-size:9pt;font-weight:600;color:#1A1208;line-height:1.3}
+#invoice-doc .mv{font-size:9pt;font-weight:700;color:#111111;line-height:1.3}
 
-/* PARTIES */
+/* PARTIES — white + very light grey bg */
 #invoice-doc .ih-parties{
   display:grid;grid-template-columns:1fr 1fr;
-  border-bottom:1px solid #E0D4BB;
+  border-bottom:1.5px solid #CCCCCC;
 }
 #invoice-doc .ih-party{padding:14px 22px}
-#invoice-doc .ih-party:first-child{border-right:1px solid #E0D4BB}
-#invoice-doc .ih-party:last-child{background:#FAF6EF}
+#invoice-doc .ih-party:first-child{border-right:1.5px solid #CCCCCC}
+#invoice-doc .ih-party:last-child{background:#F8F8F8}
 #invoice-doc .party-lbl{
   font-size:6.5pt;font-weight:700;text-transform:uppercase;
-  letter-spacing:.9px;color:#7A6840;
-  border-bottom:2px solid #C9A84C;padding-bottom:3px;
+  letter-spacing:.9px;color:#555555;
+  border-bottom:2.5px solid #111111;padding-bottom:3px;
   display:inline-block;margin-bottom:7px;
 }
-#invoice-doc .party-name{font-size:11.5pt;font-weight:700;color:#1A1208;margin-bottom:3px}
-#invoice-doc .party-detail{font-size:8pt;color:#7A6840;line-height:1.85}
+#invoice-doc .party-name{font-size:11.5pt;font-weight:700;color:#111111;margin-bottom:3px}
+#invoice-doc .party-detail{font-size:8pt;color:#444444;line-height:1.85}
 
-/* TABLE */
+/* TABLE — black header, grey alternating rows */
 #invoice-doc .ih-table-wrap{padding:0 22px;flex:1}
 #invoice-doc table{width:100%;border-collapse:collapse;margin-top:12px}
-#invoice-doc thead tr{background:#15100A}
+#invoice-doc thead tr{background:#111111}
 #invoice-doc thead th{
   padding:8px 10px;font-size:7pt;font-weight:700;
-  text-transform:uppercase;letter-spacing:.8px;color:#C9A84C;text-align:left;
+  text-transform:uppercase;letter-spacing:.8px;color:#FFFFFF;text-align:left;
 }
 #invoice-doc thead th.r{text-align:right}
-#invoice-doc tbody tr:nth-child(even){background:#FAF6EF}
+#invoice-doc tbody tr:nth-child(even){background:#F4F4F4}
+#invoice-doc tbody tr:nth-child(odd){background:#FFFFFF}
 #invoice-doc tbody td{
   padding:8px 10px;font-size:9pt;
-  border-bottom:1px solid #EDE3CE;color:#1A1208;vertical-align:top;
+  border-bottom:1px solid #DDDDDD;color:#111111;vertical-align:top;
 }
-#invoice-doc tbody td.r{text-align:right;font-family:'JetBrains Mono',monospace;font-size:8.5pt}
-#invoice-doc .td-name{font-weight:600;font-size:9.5pt}
-#invoice-doc .td-desc{font-size:7pt;color:#7A6840;margin-top:2px}
+#invoice-doc tbody td.r{text-align:right;font-family:'JetBrains Mono',monospace;font-size:8.5pt;font-weight:600}
+#invoice-doc .td-name{font-weight:700;font-size:9.5pt}
+#invoice-doc .td-desc{font-size:7pt;color:#555555;margin-top:2px}
 
 /* FOOTER */
 #invoice-doc .ih-footer{
   display:grid;grid-template-columns:1fr 210px;
-  border-top:1px solid #E0D4BB;margin-top:auto;
+  border-top:1.5px solid #CCCCCC;margin-top:auto;
 }
-#invoice-doc .ih-notes{padding:14px 22px;border-right:1px solid #E0D4BB}
+#invoice-doc .ih-notes{padding:14px 22px;border-right:1.5px solid #CCCCCC}
 #invoice-doc .notes-lbl{
   font-size:6.5pt;font-weight:700;text-transform:uppercase;
-  letter-spacing:.8px;color:#7A6840;margin-bottom:4px;
+  letter-spacing:.8px;color:#555555;margin-bottom:4px;
 }
-#invoice-doc .notes-txt{font-size:8.5pt;color:#3D2E10;line-height:1.75}
+#invoice-doc .notes-txt{font-size:8.5pt;color:#222222;line-height:1.75}
 #invoice-doc .words-lbl{
   font-size:6.5pt;font-weight:700;text-transform:uppercase;
-  letter-spacing:.6px;color:#9A7A30;margin-top:9px;margin-bottom:3px;
+  letter-spacing:.6px;color:#555555;margin-top:9px;margin-bottom:3px;
 }
-#invoice-doc .words-txt{font-size:7.5pt;color:#9A7A30;font-style:italic;line-height:1.5}
+#invoice-doc .words-txt{font-size:7.5pt;color:#333333;font-style:italic;font-weight:600;line-height:1.5}
 #invoice-doc .sig-row{
   display:flex;justify-content:space-between;align-items:flex-end;
-  margin-top:12px;padding-top:10px;border-top:1.5px solid #EDE3CE;
+  margin-top:12px;padding-top:10px;border-top:1.5px solid #DDDDDD;
 }
 #invoice-doc .sig-box{text-align:center}
-#invoice-doc .sig-label{font-size:6pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7A6840;margin-bottom:16px}
-#invoice-doc .sig-line{border-top:1px solid #bbb;padding-top:4px;font-size:7.5pt;color:#bbb;min-width:110px}
-#invoice-doc .sig-line.gold{border-top-color:#C9A84C;color:#1A1208;font-weight:700;font-size:8pt}
+#invoice-doc .sig-label{font-size:6pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#555555;margin-bottom:16px}
+#invoice-doc .sig-line{border-top:1px solid #888888;padding-top:4px;font-size:7.5pt;color:#888888;min-width:110px}
+#invoice-doc .sig-line.gold{border-top:2px solid #111111;color:#111111;font-weight:700;font-size:8pt}
 
 /* TOTALS SIDEBAR */
-#invoice-doc .ih-tots{padding:14px 16px}
+#invoice-doc .ih-tots{padding:14px 16px;background:#F8F8F8}
 #invoice-doc .tot-row{
   display:flex;justify-content:space-between;align-items:center;
-  padding:4px 0;font-size:8.5pt;
+  padding:5px 0;font-size:8.5pt;border-bottom:1px solid #EEEEEE;
 }
-#invoice-doc .tot-lbl{color:#7A6840}
-#invoice-doc .tot-val{font-family:'JetBrains Mono',monospace;color:#1A1208;font-size:8pt}
-#invoice-doc .tot-row.grand{border-top:2px solid #C9A84C;margin-top:7px;padding-top:9px}
-#invoice-doc .tot-row.grand .tot-lbl{font-family:'Cormorant Garamond',serif;font-size:11pt;color:#1A1208;font-weight:700}
-#invoice-doc .tot-row.grand .tot-val{font-family:'Cormorant Garamond',serif;font-size:14pt;color:#C9A84C;font-weight:700}
+#invoice-doc .tot-row:last-child{border-bottom:none}
+#invoice-doc .tot-lbl{color:#555555}
+#invoice-doc .tot-val{font-family:'JetBrains Mono',monospace;color:#111111;font-size:8pt;font-weight:600}
+#invoice-doc .tot-row.grand{
+  border-top:2.5px solid #111111;border-bottom:none;
+  margin-top:7px;padding-top:9px;background:transparent;
+}
+#invoice-doc .tot-row.grand .tot-lbl{font-family:'Cormorant Garamond',serif;font-size:11pt;color:#111111;font-weight:700}
+#invoice-doc .tot-row.grand .tot-val{font-family:'Cormorant Garamond',serif;font-size:14pt;color:#111111;font-weight:700}
 #invoice-doc .balance-badge{
-  background:#15100A;color:#C9A84C;
+  background:#111111;color:#FFFFFF;
   display:flex;justify-content:space-between;
-  padding:8px 10px;border-radius:7px;
-  font-weight:700;font-size:9pt;margin-top:9px;
+  padding:9px 11px;border-radius:6px;
+  font-weight:700;font-size:9pt;margin-top:10px;
+  border:2px solid #111111;
 }
-#invoice-doc .balance-badge span:last-child{font-family:'JetBrains Mono',monospace}
+#invoice-doc .balance-badge span:last-child{font-family:'JetBrains Mono',monospace;font-weight:700}
 
-/* BOTTOM BAR */
+/* BOTTOM BAR — solid black */
 #invoice-doc .ih-bar{
-  background:linear-gradient(90deg,#15100A,#2D2010);
+  background:#111111;
   display:flex;justify-content:space-between;align-items:center;
   padding:8px 22px;
 }
-#invoice-doc .ih-bar span{font-size:7.5pt;font-weight:600;color:rgba(250,246,239,.7);letter-spacing:.3px}
-#invoice-doc .ih-bar .bar-num{color:#C9A84C;font-family:'JetBrains Mono',monospace;font-size:8pt}
+#invoice-doc .ih-bar span{font-size:7.5pt;font-weight:600;color:#CCCCCC;letter-spacing:.3px}
+#invoice-doc .ih-bar .bar-num{color:#FFFFFF;font-family:'JetBrains Mono',monospace;font-size:8pt;font-weight:700}
 
-/* watermark diagonal */
+/* WATERMARK — very faint grey for B&W */
 #invoice-doc .watermark{
   position:absolute;top:50%;left:50%;
   transform:translate(-50%,-50%) rotate(-35deg);
   font-family:'Cormorant Garamond',serif;font-size:90pt;font-weight:700;
-  color:rgba(201,168,76,.04);pointer-events:none;white-space:nowrap;
+  color:rgba(0,0,0,.04);pointer-events:none;white-space:nowrap;
   z-index:0;letter-spacing:8px;
 }
 #invoice-doc>*:not(.watermark){position:relative;z-index:1}
@@ -787,7 +795,7 @@ input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
           <div class="ih-logo">🚖</div>
           <div>
             <div class="ih-co-name" id="p-co-name">FEABA TRAVELS</div>
-            <div class="ih-co-sub" id="p-co-sub">Bommanahalli, Bengaluru Karnataka<br/>📞 98801 59085 &nbsp;✉ feabatravels@gmail.com</div>
+            <div class="ih-co-sub" id="p-co-sub">Bommanahalli, Bengaluru Karnataka<br/>📞 98801 59085 &nbsp;✉ <a href="/cdn-cgi/l/email-protection" class="__cf_email__" data-cfemail="21474440434055534057444d5261464c40484d0f424e4c">[email&#160;protected]</a></div>
           </div>
         </div>
         <div class="ih-right">
@@ -970,7 +978,7 @@ input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
 <div class="toast" id="toast"></div>
 
 <!-- ═══════════ SCRIPT ═══════════ -->
-<script>
+<script data-cfasync="false" src="/cdn-cgi/scripts/5c5dd728/cloudflare-static/email-decode.min.js"></script><script>
 'use strict';
 
 /* ── State ── */
@@ -1490,12 +1498,4 @@ function n2w(n) {
       o[Math.floor(x/100)] + ' Hundred' + (x%100 ? ' '+h(x%100) : '');
   }
   let r = '';
-  if (n >= 10000000) { r += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000; }
-  if (n >= 100000)   { r += h(Math.floor(n/100000)) + ' Lakh '; n %= 100000; }
-  if (n >= 1000)     { r += h(Math.floor(n/1000)) + ' Thousand '; n %= 1000; }
-  if (n > 0) r += h(n);
-  return r.trim();
-}
-</script>
-</body>
-</html>
+  if (n >= 10000000) { r += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000
