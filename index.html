@@ -1220,74 +1220,82 @@ let pdfReadyBlob = null;
 
 async function dlPDF() {
   buildPreview();
-  openPdfModal('⏳ Rendering invoice…', 0);
+  openPdfModal('Rendering invoice…', 0);
 
   const el = document.getElementById('invoice-doc');
   const num = document.getElementById('inv-num-display').textContent;
   currentPdfFilename = num + '.pdf';
 
-  // Hide border for capture
   const origBorder = el.style.border;
-  el.style.border = 'none';
+  el.style.border = '1px solid #000';
 
   try {
-    setProgress(15);
-    await new Promise(r => setTimeout(r, 80));
+    setProgress(20);
+    // Give the DOM a moment to settle after buildPreview
+    await new Promise(r => setTimeout(r, 150));
 
-    setProgress(30);
-    // Capture at 3× for sharpness
+    setProgress(35);
     const canvas = await html2canvas(el, {
-      scale: 3,
+      scale: 2,
       useCORS: true,
       logging: false,
       backgroundColor: '#ffffff',
-      allowTaint: true,
-      imageTimeout: 0,
-      windowWidth: el.offsetWidth,
-      windowHeight: el.offsetHeight
+      allowTaint: false,
+      foreignObjectRendering: false
     });
 
-    setProgress(65);
+    setProgress(60);
     el.style.border = origBorder;
 
-    const imgData = canvas.toDataURL('image/jpeg', 0.97);
+    // Validate canvas produced real pixels
+    const cW = canvas.width;
+    const cH = canvas.height;
+    if (!cW || !cH || isNaN(cW) || isNaN(cH)) {
+      throw new Error('Canvas render failed (zero size). Try Preview tab first.');
+    }
 
-    // A4 landscape: 297 × 210 mm
+    const imgData = canvas.toDataURL('image/jpeg', 0.95);
+
+    // A4 landscape mm: 297 × 210
     const { jsPDF } = window.jspdf;
     const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
-    const pageW = 297, pageH = 210;
-    const margin = 8;
-    const usableW = pageW - margin * 2;
-    const usableH = pageH - margin * 2;
+    const PW = 297, PH = 210;
+    const margin = 6;
 
-    // Calculate aspect to fit
-    const imgW = canvas.width, imgH = canvas.height;
-    const ratio = Math.min(usableW / imgW, usableH / imgH);
-    const drawW = imgW * ratio, drawH = imgH * ratio;
-    const offsetX = margin + (usableW - drawW) / 2;
-    const offsetY = margin + (usableH - drawH) / 2;
+    // Scale image to fill page width, keeping aspect ratio
+    const printW = PW - margin * 2;
+    const printH = (cH / cW) * printW;
+    const x = margin;
+    // Vertically centre if shorter than page, clamp to margin if taller
+    const y = printH < (PH - margin * 2)
+      ? (PH - printH) / 2
+      : margin;
 
-    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH);
+    // Final NaN guard before addImage
+    if ([x, y, printW, printH].some(v => isNaN(v) || !isFinite(v) || v <= 0)) {
+      throw new Error(`Bad dimensions: x=${x} y=${y} w=${printW} h=${printH}`);
+    }
 
-    setProgress(85);
+    pdf.addImage(imgData, 'JPEG', x, y, printW, printH);
+    pdf.setProperties({
+      title: 'Invoice ' + num,
+      author: gv('co-name') || 'FEABA Travels',
+      subject: 'Tax Invoice'
+    });
 
-    // Add invoice number as text in PDF metadata
-    pdf.setProperties({ title: 'Invoice ' + num, author: gv('co-name') || 'FEABA Travels', subject: 'Tax Invoice' });
-
-    setProgress(95);
-    await new Promise(r => setTimeout(r, 100));
+    setProgress(90);
+    await new Promise(r => setTimeout(r, 80));
 
     pdfReadyBlob = pdf.output('blob');
     currentPdfBlob = pdfReadyBlob;
-
     setProgress(100);
     setPdfDone(num);
 
   } catch(err) {
     el.style.border = origBorder;
     closePdfModal();
-    toast('❌ PDF error: ' + err.message);
-    console.error(err);
+    toast('❌ ' + err.message);
+    console.error('PDF error:', err);
   }
 }
 
