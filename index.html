@@ -2,183 +2,637 @@
 <html lang="en">
 <head>
 <meta charset="UTF-8"/>
-<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0"/>
-<title>FEABA Travels – Invoice Generator</title>
-<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:ital,wght@0,600;0,700;1,600&family=DM+Sans:wght@300;400;500;600&family=DM+Mono:wght@400;500&display=swap" rel="stylesheet"/>
-<script src="https://cdnjs.cloudflare.com/ajax/libs/html2pdf.js/0.10.1/html2pdf.bundle.min.js"></script>
+<meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no"/>
+<meta name="apple-mobile-web-app-capable" content="yes"/>
+<meta name="apple-mobile-web-app-status-bar-style" content="black-translucent"/>
+<title>FEABA Travels – Invoice Pro</title>
+<link href="https://fonts.googleapis.com/css2?family=Cormorant+Garamond:ital,wght@0,500;0,600;0,700;1,500&family=DM+Sans:wght@300;400;500;600;700&family=JetBrains+Mono:wght@400;500;600&display=swap" rel="stylesheet"/>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/html2canvas/1.4.1/html2canvas.min.js"></script>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/jspdf/2.5.1/jspdf.umd.min.js"></script>
 <style>
+/* ═══════════ CSS RESET & ROOT ═══════════ */
+*,*::before,*::after{box-sizing:border-box;margin:0;padding:0;-webkit-tap-highlight-color:transparent}
 :root{
-  --gold:#C9A84C;--gold-l:#E8C97A;--gold-d:#9A7A30;
-  --ink:#1A1208;--ink2:#3D2E10;--ink3:#7A6840;
-  --cream:#FAF6EF;--cream2:#F0E9D8;--cream3:#EDE3CE;
-  --white:#fff;--red:#C0392B;
-  --sh:0 2px 16px rgba(26,18,8,.09);
-  --sh2:0 8px 40px rgba(26,18,8,.16);
+  --gold:#C9A84C;--gold-l:#E8C97A;--gold-d:#9A7A30;--gold-pale:#F5EDD0;
+  --ink:#15100A;--ink2:#2D2010;--ink3:#6B5A38;--ink4:#A0896A;
+  --cream:#FBF7F0;--cream2:#F3EDE0;--cream3:#E8DEC8;
+  --white:#FFFFFF;--red:#C0392B;--green:#27AE60;
+  --radius:14px;--radius-sm:9px;--radius-lg:20px;
+  --sh:0 2px 12px rgba(21,16,10,.08);
+  --sh2:0 8px 32px rgba(21,16,10,.14);
+  --sh3:0 20px 60px rgba(21,16,10,.18);
+  --transition:.2s cubic-bezier(.4,0,.2,1);
 }
-*,*::before,*::after{box-sizing:border-box;margin:0;padding:0}
-html{scroll-behavior:smooth}
-body{font-family:'DM Sans',sans-serif;background:var(--cream);color:var(--ink);min-height:100vh;font-size:15px}
+html{scroll-behavior:smooth;-webkit-text-size-adjust:100%}
+body{
+  font-family:'DM Sans',sans-serif;
+  background:var(--cream);color:var(--ink);
+  min-height:100vh;font-size:15px;
+  -webkit-font-smoothing:antialiased;
+  overscroll-behavior:none;
+}
 
-.topbar{background:var(--ink);padding:14px 16px;display:flex;align-items:center;justify-content:space-between;position:sticky;top:0;z-index:200;border-bottom:2.5px solid var(--gold)}
-.brand{display:flex;align-items:center;gap:9px}
-.brand-ico{width:34px;height:34px;background:var(--gold);border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:17px}
-.brand-name{font-family:'Playfair Display',serif;font-size:17px;color:var(--cream)}.brand-name b{color:var(--gold)}
-.badge{background:var(--gold);color:var(--ink);font-size:10px;font-weight:700;padding:3px 9px;border-radius:20px;letter-spacing:.6px;text-transform:uppercase}
+/* ═══════════ LOGIN OVERLAY ═══════════ */
+#login-overlay{
+  position:fixed;inset:0;z-index:9999;
+  background:var(--ink);
+  display:flex;flex-direction:column;align-items:center;justify-content:center;
+  padding:24px;
+}
+.login-logo{font-family:'Cormorant Garamond',serif;font-size:32px;color:var(--gold);margin-bottom:4px;text-align:center}
+.login-sub{font-size:12px;color:var(--ink4);letter-spacing:1.5px;text-transform:uppercase;margin-bottom:36px;text-align:center}
+.login-card{
+  width:100%;max-width:380px;
+  background:rgba(255,255,255,.05);
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:var(--radius-lg);
+  padding:28px 24px;
+  backdrop-filter:blur(10px);
+}
+.login-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--cream);margin-bottom:22px;text-align:center}
+.lf{display:flex;flex-direction:column;gap:5px;margin-bottom:16px}
+.lf label{font-size:10px;font-weight:700;text-transform:uppercase;letter-spacing:.8px;color:var(--ink4)}
+.lf input,.lf select{
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  background:rgba(255,255,255,.07);
+  border:1.5px solid rgba(201,168,76,.2);
+  border-radius:var(--radius-sm);padding:11px 14px;
+  color:var(--cream);outline:none;transition:var(--transition);
+  -webkit-appearance:none;width:100%;
+}
+.lf input:focus,.lf select:focus{border-color:var(--gold);background:rgba(255,255,255,.1)}
+.lf select option{background:#1a1208;color:#fff}
+.login-btn{
+  width:100%;padding:14px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  color:var(--ink);border:none;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;margin-top:8px;letter-spacing:.3px;
+  transition:var(--transition);
+}
+.login-btn:active{opacity:.85;transform:scale(.98)}
+.login-skip{
+  text-align:center;margin-top:16px;
+  font-size:12px;color:var(--ink4);cursor:pointer;
+  text-decoration:underline;
+}
+.login-skip:active{color:var(--gold)}
 
-.tabs{display:flex;background:#2a1e08;position:sticky;top:62px;z-index:190}
-.tab{flex:1;padding:12px 4px;border:none;background:transparent;color:var(--ink3);font-family:'DM Sans',sans-serif;font-size:12px;font-weight:500;cursor:pointer;border-bottom:3px solid transparent;transition:all .2s}
-.tab.on{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.07)}
+/* ═══════════ TOP BAR ═══════════ */
+.topbar{
+  background:var(--ink);
+  padding:0 16px;height:58px;
+  display:flex;align-items:center;justify-content:space-between;
+  position:sticky;top:0;z-index:200;
+  border-bottom:2px solid var(--gold);
+  box-shadow:0 2px 20px rgba(0,0,0,.3);
+}
+.brand{display:flex;align-items:center;gap:10px}
+.brand-ico{
+  width:36px;height:36px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  border-radius:10px;display:flex;align-items:center;justify-content:center;
+  font-size:18px;flex-shrink:0;
+}
+.brand-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:19px;color:var(--cream);line-height:1;
+}
+.brand-name span{color:var(--gold)}
+.driver-chip{
+  display:flex;align-items:center;gap:6px;
+  background:rgba(201,168,76,.12);
+  border:1px solid rgba(201,168,76,.25);
+  border-radius:20px;padding:4px 10px 4px 6px;
+  cursor:pointer;transition:var(--transition);
+}
+.driver-chip:active{background:rgba(201,168,76,.2)}
+.driver-chip .av{
+  width:24px;height:24px;background:var(--gold);
+  border-radius:50%;display:flex;align-items:center;justify-content:center;
+  font-size:11px;font-weight:700;color:var(--ink);flex-shrink:0;
+}
+.driver-chip .name{font-size:11px;font-weight:600;color:var(--cream);max-width:70px;overflow:hidden;text-overflow:ellipsis;white-space:nowrap}
 
-.panel{display:none;padding:16px 14px 40px}
+/* ═══════════ TABS ═══════════ */
+.tabs{
+  display:flex;
+  background:var(--ink2);
+  position:sticky;top:58px;z-index:190;
+  border-bottom:1px solid rgba(201,168,76,.15);
+  overflow-x:auto;scrollbar-width:none;
+}
+.tabs::-webkit-scrollbar{display:none}
+.tab{
+  flex:1;min-width:70px;padding:13px 6px 11px;
+  border:none;background:transparent;
+  color:var(--ink4);font-family:'DM Sans',sans-serif;
+  font-size:11px;font-weight:600;cursor:pointer;
+  border-bottom:2.5px solid transparent;
+  transition:var(--transition);white-space:nowrap;
+  display:flex;flex-direction:column;align-items:center;gap:3px;
+}
+.tab .tab-ico{font-size:15px}
+.tab.on{color:var(--gold);border-bottom-color:var(--gold);background:rgba(201,168,76,.06)}
+
+/* ═══════════ PANELS ═══════════ */
+.panel{display:none;padding:16px 14px 100px;animation:fadeIn .25s ease}
 .panel.on{display:block}
+@keyframes fadeIn{from{opacity:0;transform:translateY(6px)}to{opacity:1;transform:none}}
 
-.card{background:var(--white);border-radius:14px;padding:16px;margin-bottom:12px;box-shadow:var(--sh);border:1px solid var(--cream3)}
-.ctitle{font-family:'Playfair Display',serif;font-size:14px;color:var(--ink);margin-bottom:13px;display:flex;align-items:center;gap:8px}
-.ctitle .ico{width:26px;height:26px;background:var(--cream2);border-radius:7px;display:flex;align-items:center;justify-content:center;font-size:13px}
+/* ═══════════ CARDS ═══════════ */
+.card{
+  background:var(--white);border-radius:var(--radius);
+  padding:18px 16px;margin-bottom:13px;
+  box-shadow:var(--sh);border:1px solid var(--cream3);
+  transition:box-shadow var(--transition);
+}
+.card:focus-within{box-shadow:var(--sh2)}
+.ctitle{
+  font-family:'Cormorant Garamond',serif;
+  font-size:16px;font-weight:600;color:var(--ink);
+  margin-bottom:14px;display:flex;align-items:center;gap:9px;
+}
+.ctitle .ico{
+  width:28px;height:28px;
+  background:linear-gradient(135deg,var(--cream2),var(--cream3));
+  border-radius:8px;display:flex;align-items:center;justify-content:center;
+  font-size:14px;flex-shrink:0;
+}
 
-.row{display:flex;gap:10px;margin-bottom:11px}
-.row.col{flex-direction:column}
-.fg{flex:1;display:flex;flex-direction:column;gap:4px}
-label{font-size:10.5px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase}
-input,select,textarea{font-family:'DM Sans',sans-serif;font-size:13.5px;color:var(--ink);background:var(--cream);border:1.5px solid var(--cream3);border-radius:9px;padding:9px 12px;outline:none;transition:all .2s;width:100%;-webkit-appearance:none}
-input:focus,select:focus,textarea:focus{border-color:var(--gold);background:var(--white);box-shadow:0 0 0 3px rgba(201,168,76,.14)}
-select{background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='11' height='7'%3E%3Cpath d='M1 1l4.5 4.5L10 1' fill='none' stroke='%23C9A84C' stroke-width='2' stroke-linecap='round'/%3E%3C/svg%3E");background-repeat:no-repeat;background-position:right 11px center;padding-right:30px}
-textarea{resize:vertical;min-height:68px}
+/* ═══════════ FORM FIELDS ═══════════ */
+.row{display:flex;gap:10px;margin-bottom:12px}
+.fg{flex:1;display:flex;flex-direction:column;gap:5px;min-width:0}
+label{
+  font-size:10px;font-weight:700;color:var(--ink3);
+  letter-spacing:.7px;text-transform:uppercase;
+}
+input,select,textarea{
+  font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);
+  background:var(--cream);border:1.5px solid var(--cream3);
+  border-radius:var(--radius-sm);padding:11px 13px;
+  outline:none;transition:var(--transition);width:100%;
+  -webkit-appearance:none;-moz-appearance:none;
+  min-height:44px;/* iOS tap target */
+}
+input:focus,select:focus,textarea:focus{
+  border-color:var(--gold);background:var(--white);
+  box-shadow:0 0 0 3px rgba(201,168,76,.15);
+}
+select{
+  background-image:url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='12' height='7'%3E%3Cpath d='M1 1l5 5 5-5' fill='none' stroke='%23C9A84C' stroke-width='1.8' stroke-linecap='round'/%3E%3C/svg%3E");
+  background-repeat:no-repeat;background-position:right 13px center;
+  padding-right:36px;
+}
+textarea{resize:vertical;min-height:75px;line-height:1.5}
+input[type=number]{font-family:'JetBrains Mono',monospace;font-size:13px}
+input[readonly]{background:var(--cream2);color:var(--gold-d);font-weight:600}
+@media(max-width:420px){.row{flex-direction:column}}
 
-.invbar{display:flex;align-items:center;gap:8px;background:var(--cream);border-radius:9px;padding:9px 13px;border:1.5px dashed var(--gold-d);margin-bottom:11px}
-.invbar .lbl{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:.5px;text-transform:uppercase;flex-shrink:0}
-.invbar .val{font-family:'DM Mono',monospace;font-size:13px;color:var(--gold-d);font-weight:500;flex:1}
-.regenBtn{background:var(--gold);color:var(--ink);border:none;border-radius:7px;padding:5px 10px;font-size:11px;font-weight:700;cursor:pointer;flex-shrink:0}
+/* ═══════════ INVOICE NUMBER BAR ═══════════ */
+.invbar{
+  display:flex;align-items:center;gap:10px;
+  background:linear-gradient(135deg,var(--cream2),var(--gold-pale));
+  border-radius:var(--radius-sm);padding:11px 14px;
+  border:1.5px dashed var(--gold-d);margin-bottom:13px;
+}
+.invbar .lbl{font-size:10px;font-weight:700;color:var(--ink3);letter-spacing:.7px;text-transform:uppercase;flex-shrink:0}
+.invbar .val{font-family:'JetBrains Mono',monospace;font-size:14px;color:var(--gold-d);font-weight:600;flex:1}
+.regenBtn{
+  background:var(--gold);color:var(--ink);border:none;
+  border-radius:7px;padding:7px 12px;font-size:11px;font-weight:700;
+  cursor:pointer;flex-shrink:0;transition:var(--transition);
+}
+.regenBtn:active{background:var(--gold-d);color:#fff}
 
-.li-wrap{background:var(--cream);border-radius:11px;padding:13px;margin-bottom:9px;border:1.5px solid var(--cream3);transition:border .2s}
-.li-wrap:focus-within{border-color:var(--gold-d)}
-.li-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:9px}
-.li-num{width:22px;height:22px;background:var(--gold);border-radius:6px;font-size:11px;font-weight:700;color:var(--ink);display:flex;align-items:center;justify-content:center}
-.rmBtn{background:none;border:none;color:var(--red);cursor:pointer;font-size:20px;line-height:1;padding:1px 6px;border-radius:5px}
-.addBtn{width:100%;padding:11px;border:2px dashed var(--gold-d);border-radius:10px;background:transparent;color:var(--gold-d);font-family:'DM Sans',sans-serif;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px}
+/* ═══════════ LINE ITEMS ═══════════ */
+.li-wrap{
+  background:var(--cream);border-radius:var(--radius-sm);
+  padding:14px;margin-bottom:10px;
+  border:1.5px solid var(--cream3);transition:border var(--transition);
+}
+.li-wrap:focus-within{border-color:var(--gold-d);background:var(--white)}
+.li-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+.li-num{
+  width:24px;height:24px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  border-radius:7px;font-size:11px;font-weight:700;
+  color:var(--ink);display:flex;align-items:center;justify-content:center;
+}
+.rmBtn{
+  background:none;border:none;color:var(--red);
+  cursor:pointer;font-size:22px;line-height:1;
+  padding:2px 8px;border-radius:6px;min-height:36px;
+  display:flex;align-items:center;
+}
+.rmBtn:active{background:rgba(192,57,43,.1)}
+.li-input{
+  display:block;width:100%;margin-bottom:8px;
+  font-family:'DM Sans',sans-serif;font-size:14px;
+  color:var(--ink);background:var(--white);
+  border:1.5px solid var(--cream3);border-radius:var(--radius-sm);
+  padding:11px 13px;outline:none;
+  transition:var(--transition);-webkit-appearance:none;min-height:44px;
+}
+.li-input:focus{border-color:var(--gold);box-shadow:0 0 0 3px rgba(201,168,76,.15)}
+.li-desc{background:var(--cream);font-size:13px;color:var(--ink3);min-height:40px}
+.addBtn{
+  width:100%;padding:13px;
+  border:2px dashed var(--gold-d);border-radius:var(--radius-sm);
+  background:transparent;color:var(--gold-d);
+  font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:7px;transition:var(--transition);min-height:48px;
+}
+.addBtn:active{background:rgba(201,168,76,.08)}
 
-.totcard{background:var(--ink);border-radius:14px;padding:16px;margin-bottom:12px}
-.trow{display:flex;justify-content:space-between;align-items:center;padding:6px 0;border-bottom:1px solid rgba(255,255,255,.07);font-size:13px}
+/* ═══════════ TOTALS ═══════════ */
+.totcard{
+  background:linear-gradient(160deg,#1A1208,#2D2010);
+  border-radius:var(--radius);padding:18px 16px;margin-bottom:13px;
+  box-shadow:var(--sh2);
+}
+.trow{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:7px 0;border-bottom:1px solid rgba(255,255,255,.06);font-size:13px;
+}
 .trow:last-child{border:none}
-.trow.big{padding-top:11px;border-top:1px solid var(--gold-d);border-bottom:none}
-.trow .tl{color:rgba(250,246,239,.55);font-size:12px}
-.trow .tv{font-family:'DM Mono',monospace;color:var(--cream)}
-.trow.big .tl{font-family:'Playfair Display',serif;font-size:15px;color:var(--cream)}
-.trow.big .tv{font-family:'Playfair Display',serif;font-size:19px;color:var(--gold);font-weight:700}
-.words{margin-top:10px;padding-top:9px;border-top:1px solid rgba(255,255,255,.09)}
-.wlbl{font-size:9.5px;color:rgba(250,246,239,.35);text-transform:uppercase;letter-spacing:.6px;margin-bottom:3px}
-.wval{font-size:12px;color:var(--gold-l);font-style:italic}
+.trow.big{padding-top:13px;border-top:1.5px solid var(--gold-d);border-bottom:none}
+.trow .tl{color:rgba(250,246,239,.5);font-size:12px}
+.trow .tv{font-family:'JetBrains Mono',monospace;color:var(--cream);font-size:13px}
+.trow.big .tl{font-family:'Cormorant Garamond',serif;font-size:17px;color:var(--cream);font-weight:500}
+.trow.big .tv{font-family:'Cormorant Garamond',serif;font-size:22px;color:var(--gold);font-weight:700}
+.words{margin-top:12px;padding-top:10px;border-top:1px solid rgba(255,255,255,.08)}
+.wlbl{font-size:9px;color:rgba(250,246,239,.3);text-transform:uppercase;letter-spacing:.8px;margin-bottom:4px}
+.wval{font-size:12px;color:var(--gold-l);font-style:italic;line-height:1.5}
 
-.arow{display:flex;gap:9px;margin-bottom:10px}
-.btnP{flex:1;padding:13px;background:var(--gold);color:var(--ink);border:none;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:700;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:5px}
-.btnP:active{background:var(--gold-d);color:#fff}
-.btnS{padding:13px 16px;background:var(--ink);color:var(--cream);border:none;border-radius:11px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer}
-.btnO{flex:1;padding:13px;background:transparent;color:var(--ink);border:2px solid var(--ink);border-radius:11px;font-family:'DM Sans',sans-serif;font-size:13.5px;font-weight:600;cursor:pointer}
+/* ═══════════ ACTION BUTTONS ═══════════ */
+.arow{display:flex;gap:10px;margin-bottom:10px}
+.btnP{
+  flex:1;padding:15px 12px;
+  background:linear-gradient(135deg,var(--gold),var(--gold-l));
+  color:var(--ink);border:none;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:6px;min-height:50px;transition:var(--transition);
+  box-shadow:0 4px 15px rgba(201,168,76,.35);
+}
+.btnP:active{transform:scale(.97);box-shadow:none}
+.btnS{
+  padding:15px 16px;background:var(--ink);color:var(--cream);
+  border:none;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:600;
+  cursor:pointer;min-height:50px;transition:var(--transition);
+}
+.btnS:active{opacity:.8}
+.btnO{
+  flex:1;padding:15px 12px;background:transparent;
+  color:var(--ink);border:2px solid var(--cream3);
+  border-radius:var(--radius-sm);font-family:'DM Sans',sans-serif;
+  font-size:14px;font-weight:600;cursor:pointer;
+  min-height:50px;display:flex;align-items:center;justify-content:center;gap:6px;
+  transition:var(--transition);
+}
+.btnO:active{background:var(--cream2)}
+.btnW{
+  flex:1;padding:15px 12px;
+  background:linear-gradient(135deg,#25D366,#128C7E);
+  color:#fff;border:none;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:14px;font-weight:700;
+  cursor:pointer;display:flex;align-items:center;justify-content:center;
+  gap:8px;min-height:50px;transition:var(--transition);
+  box-shadow:0 4px 15px rgba(37,211,102,.3);
+}
+.btnW:active{transform:scale(.97);box-shadow:none}
 
-.si{background:var(--white);border-radius:12px;padding:13px;margin-bottom:9px;display:flex;justify-content:space-between;align-items:center;border:1px solid var(--cream3);cursor:pointer}
-.si-num{font-family:'DM Mono',monospace;font-size:11px;color:var(--gold-d)}
-.si-client{font-weight:600;font-size:14px;margin-top:2px}
-.si-date{font-size:11px;color:var(--ink3);margin-top:2px}
-.si-amt{font-family:'Playfair Display',serif;font-size:17px;font-weight:700}
-.si-st{font-size:10px;font-weight:700;padding:3px 8px;border-radius:20px;text-align:center;margin-top:4px;cursor:pointer}
+/* ═══════════ SAVED LIST ═══════════ */
+.si{
+  background:var(--white);border-radius:var(--radius-sm);
+  padding:14px 16px;margin-bottom:10px;
+  display:flex;justify-content:space-between;align-items:center;
+  border:1px solid var(--cream3);
+  box-shadow:var(--sh);transition:var(--transition);
+}
+.si:active{transform:scale(.99)}
+.si-num{font-family:'JetBrains Mono',monospace;font-size:10.5px;color:var(--gold-d)}
+.si-client{font-weight:600;font-size:15px;margin-top:3px}
+.si-date{font-size:11.5px;color:var(--ink3);margin-top:2px}
+.si-amt{font-family:'Cormorant Garamond',serif;font-size:19px;font-weight:700;color:var(--ink)}
+.si-st{
+  font-size:10px;font-weight:700;padding:4px 10px;
+  border-radius:20px;text-align:center;margin-top:5px;cursor:pointer;
+  min-height:28px;display:flex;align-items:center;
+}
 .paid{background:#d4edda;color:#155724}.due{background:#fff3cd;color:#856404}
-.empty{text-align:center;padding:48px 20px;color:var(--ink3)}.empty span{font-size:48px;display:block;margin-bottom:12px}
+.empty{text-align:center;padding:56px 20px;color:var(--ink3)}
+.empty .ei{font-size:52px;margin-bottom:14px}
+.empty p{font-size:15px}
 
-.tog-row{display:flex;justify-content:space-between;align-items:center;padding:11px 0;border-bottom:1px solid var(--cream3)}
+/* ═══════════ SETTINGS ═══════════ */
+.tog-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:13px 0;border-bottom:1px solid var(--cream3);
+}
 .tog-row:last-child{border:none}
-.tog-lbl{font-size:13.5px;font-weight:500}.tog-desc{font-size:11px;color:var(--ink3);margin-top:2px}
-.tog{width:44px;height:25px;background:var(--cream3);border-radius:13px;position:relative;cursor:pointer;transition:background .2s;border:none;flex-shrink:0}
+.tog-lbl{font-size:14px;font-weight:500}
+.tog-desc{font-size:11.5px;color:var(--ink3);margin-top:3px}
+.tog{
+  width:46px;height:27px;background:var(--cream3);
+  border-radius:14px;position:relative;cursor:pointer;
+  transition:background var(--transition);border:none;flex-shrink:0;
+}
 .tog.on{background:var(--gold)}
-.tog::after{content:'';position:absolute;width:19px;height:19px;background:#fff;border-radius:50%;top:3px;left:3px;transition:left .2s;box-shadow:0 1px 4px rgba(0,0,0,.2)}
+.tog::after{
+  content:'';position:absolute;
+  width:21px;height:21px;background:#fff;
+  border-radius:50%;top:3px;left:3px;
+  transition:left var(--transition);box-shadow:0 1px 4px rgba(0,0,0,.2);
+}
 .tog.on::after{left:22px}
-.swatches{display:flex;gap:8px;flex-wrap:wrap}
-.sw{width:30px;height:30px;border-radius:8px;cursor:pointer;border:3px solid transparent;transition:all .2s}
-.sw.sel{border-color:var(--ink);transform:scale(1.15)}
+.swatches{display:flex;gap:10px;flex-wrap:wrap;padding:4px 0}
+.sw{
+  width:32px;height:32px;border-radius:9px;cursor:pointer;
+  border:3px solid transparent;transition:all var(--transition);
+}
+.sw.sel{border-color:var(--ink);transform:scale(1.18);box-shadow:0 2px 8px rgba(0,0,0,.2)}
 
-.toast{position:fixed;bottom:20px;left:50%;transform:translateX(-50%) translateY(70px);background:var(--ink);color:var(--cream);padding:11px 22px;border-radius:30px;font-size:13px;font-weight:500;box-shadow:var(--sh2);transition:transform .3s;z-index:9999;white-space:nowrap;border:1px solid var(--gold-d)}
+/* ═══════════ TOAST ═══════════ */
+.toast{
+  position:fixed;bottom:24px;left:50%;
+  transform:translateX(-50%) translateY(80px);
+  background:var(--ink);color:var(--cream);
+  padding:12px 24px;border-radius:30px;
+  font-size:13.5px;font-weight:500;
+  box-shadow:var(--sh3);transition:transform .35s cubic-bezier(.34,1.56,.64,1);
+  z-index:9999;white-space:nowrap;
+  border:1px solid var(--gold-d);
+  max-width:90vw;overflow:hidden;text-overflow:ellipsis;
+}
 .toast.show{transform:translateX(-50%) translateY(0)}
 
-/* ═══ PDF INVOICE — A4 LANDSCAPE 297x210mm ═══ */
-#invoice-doc{
-  width:287mm;min-height:200mm;
-  background:#fff;font-family:'DM Sans',sans-serif;
-  color:#1a1208;font-size:10pt;
-  display:flex;flex-direction:column;
+/* ═══════════ PROGRESS MODAL ═══════════ */
+#pdf-modal{
+  display:none;position:fixed;inset:0;z-index:9998;
+  background:rgba(21,16,10,.85);backdrop-filter:blur(8px);
+  align-items:center;justify-content:center;
 }
-#invoice-doc .doc-top{background:#1A1208;display:flex;justify-content:space-between;align-items:flex-start;padding:16px 22px 14px}
-#invoice-doc .doc-co-name{font-family:'Playfair Display',serif;font-size:21pt;color:#C9A84C;letter-spacing:.4px;line-height:1.1}
-#invoice-doc .doc-co-sub{font-size:8pt;color:rgba(250,246,239,.6);margin-top:5px;line-height:1.8}
-#invoice-doc .doc-title-block{text-align:right}
-#invoice-doc .doc-title{font-family:'Playfair Display',serif;font-size:18pt;color:#fff;letter-spacing:3px}
-#invoice-doc .doc-invnum{font-family:'DM Mono',monospace;font-size:8pt;color:#C9A84C;margin-top:4px}
-#invoice-doc .doc-sep{height:3px;background:linear-gradient(90deg,#C9A84C,#E8C97A,#C9A84C)}
-#invoice-doc .doc-meta{background:#F0E9D8;display:grid;grid-template-columns:repeat(5,1fr);border-bottom:1px solid #EDE3CE}
-#invoice-doc .doc-meta-item{padding:9px 13px;border-right:1px solid #EDE3CE}
-#invoice-doc .doc-meta-item:last-child{border-right:none}
-#invoice-doc .ml{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#7A6840;margin-bottom:3px}
-#invoice-doc .mv{font-size:9pt;font-weight:600;color:#1A1208}
-#invoice-doc .doc-parties{display:grid;grid-template-columns:1fr 1fr;border-bottom:1px solid #EDE3CE}
-#invoice-doc .doc-party{padding:12px 18px}
-#invoice-doc .doc-party:first-child{border-right:1px solid #EDE3CE}
-#invoice-doc .party-lbl{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#7A6840;margin-bottom:5px;border-bottom:1.5px solid #C9A84C;padding-bottom:3px;display:inline-block}
-#invoice-doc .party-name{font-size:11pt;font-weight:700;color:#1A1208;margin-bottom:2px}
-#invoice-doc .party-detail{font-size:8pt;color:#7A6840;line-height:1.75}
-#invoice-doc .doc-table-wrap{padding:0 18px;flex:1}
-#invoice-doc table{width:100%;border-collapse:collapse;margin-top:10px}
-#invoice-doc thead tr{background:#1A1208}
-#invoice-doc thead th{padding:7px 9px;font-size:7.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#C9A84C;text-align:left}
+#pdf-modal.open{display:flex}
+.pdf-box{
+  background:var(--ink);border:1px solid rgba(201,168,76,.3);
+  border-radius:var(--radius-lg);padding:32px 28px;
+  text-align:center;width:300px;
+}
+.pdf-ico{font-size:48px;margin-bottom:14px}
+.pdf-title{font-family:'Cormorant Garamond',serif;font-size:20px;color:var(--cream);margin-bottom:8px}
+.pdf-msg{font-size:13px;color:var(--ink4);margin-bottom:20px;line-height:1.5}
+.pdf-prog{background:rgba(255,255,255,.08);border-radius:100px;height:6px;margin-bottom:20px;overflow:hidden}
+.pdf-prog-bar{height:100%;background:linear-gradient(90deg,var(--gold),var(--gold-l));border-radius:100px;width:0%;transition:width .4s ease}
+.pdf-actions{display:flex;gap:10px}
+.pdf-act{
+  flex:1;padding:12px;border-radius:var(--radius-sm);
+  font-family:'DM Sans',sans-serif;font-size:13px;font-weight:700;
+  cursor:pointer;border:none;transition:var(--transition);display:flex;
+  align-items:center;justify-content:center;gap:6px;
+}
+.pdf-act.primary{background:linear-gradient(135deg,var(--gold),var(--gold-l));color:var(--ink)}
+.pdf-act.secondary{background:rgba(255,255,255,.08);color:var(--cream)}
+.pdf-act.green{background:linear-gradient(135deg,#25D366,#128C7E);color:#fff}
+.pdf-act:active{opacity:.8}
+
+/* ═══════════ PREVIEW WRAPPER ═══════════ */
+.prev-scroll{
+  background:var(--cream2);border-radius:var(--radius);
+  padding:14px;margin-bottom:14px;
+  overflow-x:auto;-webkit-overflow-scrolling:touch;
+}
+.prev-hint{
+  font-size:11.5px;color:var(--ink3);margin-bottom:10px;
+  text-align:center;display:flex;align-items:center;justify-content:center;gap:5px;
+}
+
+/* ═══════════════════════════════════════════
+   PDF INVOICE — A4 LANDSCAPE 297×210mm
+   Rendered at 3× then scaled → crisp print
+═══════════════════════════════════════════ */
+#invoice-doc{
+  width:1050px; /* pixel equiv of 277mm at 96dpi (with margins) */
+  min-height:680px;
+  background:#FFFFFF;
+  font-family:'DM Sans',sans-serif;
+  color:#1A1208;font-size:11pt;
+  display:flex;flex-direction:column;
+  position:relative;
+  border:1px solid #e0d8c8;/* visible in preview only */
+}
+
+/* TOP HEADER */
+#invoice-doc .ih-top{
+  background:#15100A;
+  display:flex;justify-content:space-between;align-items:flex-start;
+  padding:20px 28px 17px;
+}
+#invoice-doc .ih-brand{display:flex;align-items:flex-start;gap:14px}
+#invoice-doc .ih-logo{
+  width:48px;height:48px;
+  background:linear-gradient(135deg,#C9A84C,#E8C97A);
+  border-radius:12px;display:flex;align-items:center;justify-content:center;
+  font-size:22px;flex-shrink:0;
+}
+#invoice-doc .ih-co-name{
+  font-family:'Cormorant Garamond',serif;
+  font-size:22pt;color:#C9A84C;font-weight:600;line-height:1.1;
+}
+#invoice-doc .ih-co-sub{
+  font-size:7.5pt;color:rgba(250,246,239,.55);
+  margin-top:5px;line-height:1.9;
+}
+#invoice-doc .ih-right{text-align:right}
+#invoice-doc .ih-title{
+  font-family:'Cormorant Garamond',serif;
+  font-size:20pt;color:#FFFFFF;letter-spacing:4px;font-weight:700;
+}
+#invoice-doc .ih-num{
+  font-family:'JetBrains Mono',monospace;
+  font-size:8pt;color:#C9A84C;margin-top:6px;
+}
+#invoice-doc .ih-num b{font-size:10pt}
+
+/* GOLD SEPARATOR */
+#invoice-doc .ih-sep{
+  height:4px;
+  background:linear-gradient(90deg,#9A7A30,#C9A84C,#E8C97A,#C9A84C,#9A7A30);
+}
+
+/* META STRIP */
+#invoice-doc .ih-meta{
+  background:#F0E9D8;
+  display:grid;grid-template-columns:repeat(5,1fr);
+  border-bottom:1px solid #E0D4BB;
+}
+#invoice-doc .ih-mi{padding:10px 16px;border-right:1px solid #E0D4BB}
+#invoice-doc .ih-mi:last-child{border-right:none}
+#invoice-doc .ml{
+  font-size:6.5pt;font-weight:700;text-transform:uppercase;
+  letter-spacing:.9px;color:#7A6840;margin-bottom:3px;
+}
+#invoice-doc .mv{font-size:9pt;font-weight:600;color:#1A1208;line-height:1.3}
+
+/* PARTIES */
+#invoice-doc .ih-parties{
+  display:grid;grid-template-columns:1fr 1fr;
+  border-bottom:1px solid #E0D4BB;
+}
+#invoice-doc .ih-party{padding:14px 22px}
+#invoice-doc .ih-party:first-child{border-right:1px solid #E0D4BB}
+#invoice-doc .ih-party:last-child{background:#FAF6EF}
+#invoice-doc .party-lbl{
+  font-size:6.5pt;font-weight:700;text-transform:uppercase;
+  letter-spacing:.9px;color:#7A6840;
+  border-bottom:2px solid #C9A84C;padding-bottom:3px;
+  display:inline-block;margin-bottom:7px;
+}
+#invoice-doc .party-name{font-size:11.5pt;font-weight:700;color:#1A1208;margin-bottom:3px}
+#invoice-doc .party-detail{font-size:8pt;color:#7A6840;line-height:1.85}
+
+/* TABLE */
+#invoice-doc .ih-table-wrap{padding:0 22px;flex:1}
+#invoice-doc table{width:100%;border-collapse:collapse;margin-top:12px}
+#invoice-doc thead tr{background:#15100A}
+#invoice-doc thead th{
+  padding:8px 10px;font-size:7pt;font-weight:700;
+  text-transform:uppercase;letter-spacing:.8px;color:#C9A84C;text-align:left;
+}
 #invoice-doc thead th.r{text-align:right}
 #invoice-doc tbody tr:nth-child(even){background:#FAF6EF}
-#invoice-doc tbody td{padding:7px 9px;font-size:9pt;border-bottom:1px solid #EDE3CE;color:#1A1208;vertical-align:top}
-#invoice-doc tbody td.r{text-align:right;font-family:'DM Mono',monospace;font-size:8.5pt}
+#invoice-doc tbody td{
+  padding:8px 10px;font-size:9pt;
+  border-bottom:1px solid #EDE3CE;color:#1A1208;vertical-align:top;
+}
+#invoice-doc tbody td.r{text-align:right;font-family:'JetBrains Mono',monospace;font-size:8.5pt}
 #invoice-doc .td-name{font-weight:600;font-size:9.5pt}
-#invoice-doc .td-desc{font-size:7.5pt;color:#7A6840;margin-top:1px}
-#invoice-doc .doc-footer{display:grid;grid-template-columns:1fr 190px;border-top:1px solid #EDE3CE;margin-top:auto}
-#invoice-doc .doc-notes-box{padding:12px 18px;border-right:1px solid #EDE3CE}
-#invoice-doc .notes-lbl{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.7px;color:#7A6840;margin-bottom:4px}
-#invoice-doc .notes-txt{font-size:8pt;color:#3D2E10;line-height:1.7}
-#invoice-doc .words-lbl{font-size:7pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#9A7A30;margin-top:8px;margin-bottom:2px}
-#invoice-doc .words-txt{font-size:7.5pt;color:#9A7A30;font-style:italic}
-#invoice-doc .doc-totals-box{padding:12px 14px}
-#invoice-doc .tot-row{display:flex;justify-content:space-between;align-items:center;padding:4px 0;font-size:8.5pt}
-#invoice-doc .tot-lbl{color:#7A6840}
-#invoice-doc .tot-val{font-family:'DM Mono',monospace;color:#1A1208}
-#invoice-doc .tot-row.grand{border-top:2px solid #C9A84C;margin-top:5px;padding-top:7px}
-#invoice-doc .tot-row.grand .tot-lbl{font-family:'Playfair Display',serif;font-size:10.5pt;color:#1A1208;font-weight:700}
-#invoice-doc .tot-row.grand .tot-val{font-family:'Playfair Display',serif;font-size:13pt;color:#C9A84C;font-weight:700}
-#invoice-doc .balance-badge{background:#1A1208;color:#C9A84C;display:flex;justify-content:space-between;padding:7px 9px;border-radius:6px;font-weight:700;font-size:9pt;margin-top:7px}
-#invoice-doc .sig-row{display:flex;justify-content:space-between;align-items:flex-end;margin-top:10px;padding-top:8px;border-top:1.5px solid #EDE3CE}
+#invoice-doc .td-desc{font-size:7pt;color:#7A6840;margin-top:2px}
+
+/* FOOTER */
+#invoice-doc .ih-footer{
+  display:grid;grid-template-columns:1fr 210px;
+  border-top:1px solid #E0D4BB;margin-top:auto;
+}
+#invoice-doc .ih-notes{padding:14px 22px;border-right:1px solid #E0D4BB}
+#invoice-doc .notes-lbl{
+  font-size:6.5pt;font-weight:700;text-transform:uppercase;
+  letter-spacing:.8px;color:#7A6840;margin-bottom:4px;
+}
+#invoice-doc .notes-txt{font-size:8.5pt;color:#3D2E10;line-height:1.75}
+#invoice-doc .words-lbl{
+  font-size:6.5pt;font-weight:700;text-transform:uppercase;
+  letter-spacing:.6px;color:#9A7A30;margin-top:9px;margin-bottom:3px;
+}
+#invoice-doc .words-txt{font-size:7.5pt;color:#9A7A30;font-style:italic;line-height:1.5}
+#invoice-doc .sig-row{
+  display:flex;justify-content:space-between;align-items:flex-end;
+  margin-top:12px;padding-top:10px;border-top:1.5px solid #EDE3CE;
+}
 #invoice-doc .sig-box{text-align:center}
-#invoice-doc .sig-label{font-size:6.5pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7A6840;margin-bottom:14px}
-#invoice-doc .sig-line{border-top:1px solid #bbb;padding-top:3px;font-size:7pt;color:#bbb}
-#invoice-doc .sig-line.gold{border-top-color:#C9A84C;color:#1A1208;font-weight:600;font-size:7.5pt}
-#invoice-doc .doc-bar{background:#C9A84C;display:flex;justify-content:space-between;align-items:center;padding:6px 18px}
-#invoice-doc .doc-bar span{font-size:7.5pt;font-weight:700;color:#1A1208;letter-spacing:.3px}
+#invoice-doc .sig-label{font-size:6pt;font-weight:700;text-transform:uppercase;letter-spacing:.6px;color:#7A6840;margin-bottom:16px}
+#invoice-doc .sig-line{border-top:1px solid #bbb;padding-top:4px;font-size:7.5pt;color:#bbb;min-width:110px}
+#invoice-doc .sig-line.gold{border-top-color:#C9A84C;color:#1A1208;font-weight:700;font-size:8pt}
 
-.prev-wrap{background:#888;border-radius:12px;padding:14px;margin-bottom:14px;overflow-x:auto}
-.prev-wrap .invoice-preview{min-width:860px}
+/* TOTALS SIDEBAR */
+#invoice-doc .ih-tots{padding:14px 16px}
+#invoice-doc .tot-row{
+  display:flex;justify-content:space-between;align-items:center;
+  padding:4px 0;font-size:8.5pt;
+}
+#invoice-doc .tot-lbl{color:#7A6840}
+#invoice-doc .tot-val{font-family:'JetBrains Mono',monospace;color:#1A1208;font-size:8pt}
+#invoice-doc .tot-row.grand{border-top:2px solid #C9A84C;margin-top:7px;padding-top:9px}
+#invoice-doc .tot-row.grand .tot-lbl{font-family:'Cormorant Garamond',serif;font-size:11pt;color:#1A1208;font-weight:700}
+#invoice-doc .tot-row.grand .tot-val{font-family:'Cormorant Garamond',serif;font-size:14pt;color:#C9A84C;font-weight:700}
+#invoice-doc .balance-badge{
+  background:#15100A;color:#C9A84C;
+  display:flex;justify-content:space-between;
+  padding:8px 10px;border-radius:7px;
+  font-weight:700;font-size:9pt;margin-top:9px;
+}
+#invoice-doc .balance-badge span:last-child{font-family:'JetBrains Mono',monospace}
 
-@media(max-width:420px){.row{flex-direction:column}}
+/* BOTTOM BAR */
+#invoice-doc .ih-bar{
+  background:linear-gradient(90deg,#15100A,#2D2010);
+  display:flex;justify-content:space-between;align-items:center;
+  padding:8px 22px;
+}
+#invoice-doc .ih-bar span{font-size:7.5pt;font-weight:600;color:rgba(250,246,239,.7);letter-spacing:.3px}
+#invoice-doc .ih-bar .bar-num{color:#C9A84C;font-family:'JetBrains Mono',monospace;font-size:8pt}
+
+/* watermark diagonal */
+#invoice-doc .watermark{
+  position:absolute;top:50%;left:50%;
+  transform:translate(-50%,-50%) rotate(-35deg);
+  font-family:'Cormorant Garamond',serif;font-size:90pt;font-weight:700;
+  color:rgba(201,168,76,.04);pointer-events:none;white-space:nowrap;
+  z-index:0;letter-spacing:8px;
+}
+#invoice-doc>*:not(.watermark){position:relative;z-index:1}
+
+@media print{
+  #invoice-doc{border:none}
+}
 </style>
 </head>
 <body>
 
+<!-- ═══════════ DRIVER LOGIN ═══════════ -->
+<div id="login-overlay">
+  <div class="login-logo">🚖 FEABA Travels</div>
+  <div class="login-sub">Invoice Management System</div>
+  <div class="login-card">
+    <div class="login-title">Driver Sign In</div>
+    <div class="lf">
+      <label>Driver Name</label>
+      <input id="l-driver" placeholder="Enter your full name" autocomplete="name"/>
+    </div>
+    <div class="lf">
+      <label>Vehicle Number</label>
+      <input id="l-vehicle" placeholder="e.g. KA64 4114" autocomplete="off" style="text-transform:uppercase"/>
+    </div>
+    <div class="lf">
+      <label>Cab Type</label>
+      <select id="l-cab">
+        <option>Etios</option><option>Swift Dzire</option><option>Innova</option>
+        <option>Innova Crysta</option><option>Ertiga</option>
+        <option>Tempo Traveller</option><option>Mini Bus</option>
+        <option>Bus</option><option>Auto</option><option>Other</option>
+      </select>
+    </div>
+    <button class="login-btn" onclick="doLogin()">Start Creating Invoices →</button>
+    <div class="login-skip" onclick="skipLogin()">Continue with default / skip</div>
+  </div>
+</div>
+
+<!-- ═══════════ TOP BAR ═══════════ -->
 <header class="topbar">
   <div class="brand">
     <div class="brand-ico">🚖</div>
-    <div class="brand-name">FEABA <b>Travels</b></div>
+    <div class="brand-name">FEABA <span>Travels</span></div>
   </div>
-  <div class="badge">Invoice Pro</div>
+  <div class="driver-chip" onclick="showLogin()" id="driver-chip">
+    <div class="av" id="driver-av">F</div>
+    <div class="name" id="driver-chip-name">Driver</div>
+  </div>
 </header>
 
+<!-- ═══════════ TABS ═══════════ -->
 <div class="tabs">
-  <button class="tab on"  onclick="goTab('form')">✏️ Create</button>
-  <button class="tab"     onclick="goTab('prev')">👁 Preview</button>
-  <button class="tab"     onclick="goTab('saved')">📁 Saved</button>
-  <button class="tab"     onclick="goTab('cfg')">⚙️ Settings</button>
+  <button class="tab on" onclick="goTab('form')"><span class="tab-ico">✏️</span>Create</button>
+  <button class="tab" onclick="goTab('prev')"><span class="tab-ico">👁</span>Preview</button>
+  <button class="tab" onclick="goTab('saved')"><span class="tab-ico">📁</span>Saved</button>
+  <button class="tab" onclick="goTab('cfg')"><span class="tab-ico">⚙️</span>Settings</button>
 </div>
 
-<!-- ══ FORM ══ -->
+<!-- ══════════════════════════
+     PANEL: CREATE
+══════════════════════════ -->
 <div class="panel on" id="panel-form">
 
   <div class="card">
@@ -290,7 +744,7 @@ textarea{resize:vertical;min-height:68px}
     <div class="trow"><span class="tl">Sub Total</span><span class="tv" id="t-sub">₹0.00</span></div>
     <div class="trow" id="tr-disc" style="display:none"><span class="tl">Discount</span><span class="tv" style="color:#f7b731" id="t-disc">—</span></div>
     <div class="trow" id="tr-gst" style="display:none"><span class="tl" id="t-gst-lbl">GST</span><span class="tv" id="t-gst">—</span></div>
-    <div class="trow big"><span class="tl">Total</span><span class="tv" id="t-total">₹0.00</span></div>
+    <div class="trow big"><span class="tl">Grand Total</span><span class="tv" id="t-total">₹0.00</span></div>
     <div class="words"><div class="wlbl">Amount in Words</div><div class="wval" id="t-words">—</div></div>
   </div>
 
@@ -303,346 +757,743 @@ textarea{resize:vertical;min-height:68px}
   </div>
 
   <div class="arow">
-    <button class="btnP" onclick="goPreview()">👁 Preview Invoice</button>
+    <button class="btnP" onclick="goPreview()">👁 Preview</button>
     <button class="btnS" onclick="saveInv()">💾 Save</button>
   </div>
   <div class="arow">
-    <button class="btnP" onclick="dlPDF()">⬇ Download PDF (A4 Landscape)</button>
-    <button class="btnO" onclick="clearForm()">🗑 Clear</button>
-  </div>
-</div>
-
-<!-- ══ PREVIEW ══ -->
-<div class="panel" id="panel-prev">
-  <div class="prev-wrap">
-    <div class="invoice-preview">
-      <div id="invoice-doc">
-
-        <div class="doc-top">
-          <div>
-            <div class="doc-co-name" id="p-co-name">FEABA TRAVELS</div>
-            <div class="doc-co-sub" id="p-co-sub">Bommanahalli, Bengaluru Karnataka<br/>📞 98801 59085 &nbsp;✉ feabatravels@gmail.com</div>
-          </div>
-          <div class="doc-title-block">
-            <div class="doc-title">TAX INVOICE</div>
-            <div class="doc-invnum" id="p-num">#: FEABA0000000</div>
-          </div>
-        </div>
-
-        <div class="doc-sep"></div>
-
-        <div class="doc-meta">
-          <div class="doc-meta-item"><div class="ml">Invoice Date</div><div class="mv" id="p-idate">—</div></div>
-          <div class="doc-meta-item"><div class="ml">Due Date</div><div class="mv" id="p-ddate">—</div></div>
-          <div class="doc-meta-item"><div class="ml">Terms</div><div class="mv" id="p-terms">Due on Receipt</div></div>
-          <div class="doc-meta-item"><div class="ml">Cab / Vehicle</div><div class="mv" id="p-cab">—</div></div>
-          <div class="doc-meta-item"><div class="ml">Journey</div><div class="mv" id="p-journey">—</div></div>
-        </div>
-
-        <div class="doc-parties">
-          <div class="doc-party">
-            <div class="party-lbl">Bill To</div>
-            <div class="party-name" id="p-cust-name">Customer Name</div>
-            <div class="party-detail" id="p-cust-detail">—</div>
-          </div>
-          <div class="doc-party" style="background:#faf6ef">
-            <div class="party-lbl">Trip Details</div>
-            <div class="party-detail" id="p-trip-detail">—</div>
-          </div>
-        </div>
-
-        <div class="doc-table-wrap">
-          <table>
-            <thead>
-              <tr>
-                <th style="width:28px">#</th>
-                <th>Item &amp; Description</th>
-                <th class="r" style="width:75px">Rate (₹)</th>
-                <th class="r" style="width:45px">Qty</th>
-                <th class="r" style="width:85px">Amount (₹)</th>
-              </tr>
-            </thead>
-            <tbody id="p-tbody"></tbody>
-          </table>
-        </div>
-
-        <div class="doc-footer">
-          <div class="doc-notes-box">
-            <div class="notes-lbl">Notes</div>
-            <div class="notes-txt" id="p-notes">Thanks for your business.</div>
-            <div class="words-lbl">Amount in Words</div>
-            <div class="words-txt" id="p-words">—</div>
-            <div class="sig-row">
-              <div class="sig-box">
-                <div class="sig-label">Customer Signature</div>
-                <div class="sig-line" style="width:110px">Sign here</div>
-              </div>
-              <div class="sig-box">
-                <div class="sig-label">Authorized Signatory</div>
-                <div class="sig-line gold" id="p-signatory" style="width:120px">FEABA Travels</div>
-              </div>
-            </div>
-          </div>
-          <div class="doc-totals-box">
-            <div class="tot-row"><span class="tot-lbl">Sub Total</span><span class="tot-val" id="p-sub">₹0.00</span></div>
-            <div class="tot-row" id="p-disc-row" style="display:none"><span class="tot-lbl" id="p-disc-lbl">Discount</span><span class="tot-val" style="color:#e67e22" id="p-disc-val">—</span></div>
-            <div class="tot-row" id="p-gst-row" style="display:none"><span class="tot-lbl" id="p-gst-lbl">GST</span><span class="tot-val" id="p-gst-val">—</span></div>
-            <div class="tot-row grand"><span class="tot-lbl">Total</span><span class="tot-val" id="p-total">₹0.00</span></div>
-            <div class="balance-badge"><span>Balance Due</span><span id="p-balance">₹0.00</span></div>
-          </div>
-        </div>
-
-        <div class="doc-bar">
-          <span id="p-bar-co">FEABA Travels — Trusted Ride Partner</span>
-          <span id="p-bar-num">#FEABA0000000</span>
-        </div>
-
-      </div>
-    </div>
+    <button class="btnP" onclick="dlPDF()">⬇ Download PDF</button>
+    <button class="btnW" onclick="shareWhatsApp()">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.549 4.107 1.51 5.833L.06 23.077a.75.75 0 00.924.924l5.244-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.66-.493-5.19-1.357l-.37-.215-3.838 1.06 1.06-3.838-.215-.37A10 10 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      WhatsApp
+    </button>
   </div>
   <div class="arow">
-    <button class="btnP" onclick="dlPDF()">⬇ Download PDF (A4 Landscape)</button>
-    <button class="btnS" onclick="goTab('form')">✏️ Edit</button>
+    <button class="btnO" onclick="clearForm()">🗑 Clear Form</button>
   </div>
 </div>
 
-<!-- ══ SAVED ══ -->
+<!-- ══════════════════════════
+     PANEL: PREVIEW
+══════════════════════════ -->
+<div class="panel" id="panel-prev">
+  <div class="prev-hint">← Scroll to see full invoice →</div>
+  <div class="prev-scroll">
+    <!-- Invoice rendered here -->
+    <div id="invoice-doc">
+      <div class="watermark">FEABA</div>
+
+      <div class="ih-top">
+        <div class="ih-brand">
+          <div class="ih-logo">🚖</div>
+          <div>
+            <div class="ih-co-name" id="p-co-name">FEABA TRAVELS</div>
+            <div class="ih-co-sub" id="p-co-sub">Bommanahalli, Bengaluru Karnataka<br/>📞 98801 59085 &nbsp;✉ feabatravels@gmail.com</div>
+          </div>
+        </div>
+        <div class="ih-right">
+          <div class="ih-title">TAX INVOICE</div>
+          <div class="ih-num">Invoice No: <b id="p-num">FEABA0000000</b></div>
+        </div>
+      </div>
+
+      <div class="ih-sep"></div>
+
+      <div class="ih-meta">
+        <div class="ih-mi"><div class="ml">Invoice Date</div><div class="mv" id="p-idate">—</div></div>
+        <div class="ih-mi"><div class="ml">Due Date</div><div class="mv" id="p-ddate">—</div></div>
+        <div class="ih-mi"><div class="ml">Terms</div><div class="mv" id="p-terms">Due on Receipt</div></div>
+        <div class="ih-mi"><div class="ml">Cab / Vehicle</div><div class="mv" id="p-cab">—</div></div>
+        <div class="ih-mi"><div class="ml">Journey Date</div><div class="mv" id="p-jdate">—</div></div>
+      </div>
+
+      <div class="ih-parties">
+        <div class="ih-party">
+          <div class="party-lbl">Bill To</div>
+          <div class="party-name" id="p-cust-name">Customer Name</div>
+          <div class="party-detail" id="p-cust-detail">—</div>
+        </div>
+        <div class="ih-party">
+          <div class="party-lbl">Trip Details</div>
+          <div class="party-detail" id="p-trip-detail">—</div>
+        </div>
+      </div>
+
+      <div class="ih-table-wrap">
+        <table>
+          <thead>
+            <tr>
+              <th style="width:32px">#</th>
+              <th>Service / Item Description</th>
+              <th class="r" style="width:90px">Rate (₹)</th>
+              <th class="r" style="width:50px">Qty</th>
+              <th class="r" style="width:100px">Amount (₹)</th>
+            </tr>
+          </thead>
+          <tbody id="p-tbody"></tbody>
+        </table>
+      </div>
+
+      <div class="ih-footer">
+        <div class="ih-notes">
+          <div class="notes-lbl">Notes &amp; Terms</div>
+          <div class="notes-txt" id="p-notes">Thanks for your business.</div>
+          <div class="words-lbl">Amount in Words</div>
+          <div class="words-txt" id="p-words">—</div>
+          <div class="sig-row">
+            <div class="sig-box">
+              <div class="sig-label">Customer Signature</div>
+              <div class="sig-line" style="width:120px">Sign here</div>
+            </div>
+            <div class="sig-box">
+              <div class="sig-label">Authorized Signatory</div>
+              <div class="sig-line gold" id="p-signatory" style="width:130px">FEABA Travels</div>
+            </div>
+          </div>
+        </div>
+        <div class="ih-tots">
+          <div class="tot-row"><span class="tot-lbl">Sub Total</span><span class="tot-val" id="p-sub">₹0.00</span></div>
+          <div class="tot-row" id="p-disc-row" style="display:none">
+            <span class="tot-lbl" id="p-disc-lbl">Discount</span>
+            <span class="tot-val" style="color:#e67e22" id="p-disc-val">—</span>
+          </div>
+          <div class="tot-row" id="p-gst-row" style="display:none">
+            <span class="tot-lbl" id="p-gst-lbl">GST</span>
+            <span class="tot-val" id="p-gst-val">—</span>
+          </div>
+          <div class="tot-row grand">
+            <span class="tot-lbl">Total</span>
+            <span class="tot-val" id="p-total">₹0.00</span>
+          </div>
+          <div class="balance-badge">
+            <span>Balance Due</span>
+            <span id="p-balance">₹0.00</span>
+          </div>
+        </div>
+      </div>
+
+      <div class="ih-bar">
+        <span id="p-bar-co">FEABA Travels — Trusted Ride Partner</span>
+        <span class="bar-num" id="p-bar-num">#FEABA0000000</span>
+      </div>
+
+    </div><!-- /invoice-doc -->
+  </div><!-- /prev-scroll -->
+
+  <div class="arow">
+    <button class="btnP" onclick="dlPDF()">⬇ Download PDF</button>
+    <button class="btnS" onclick="goTab('form')">✏️ Edit</button>
+  </div>
+  <div class="arow">
+    <button class="btnW" onclick="shareWhatsApp()" style="flex:1">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.549 4.107 1.51 5.833L.06 23.077a.75.75 0 00.924.924l5.244-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.66-.493-5.19-1.357l-.37-.215-3.838 1.06 1.06-3.838-.215-.37A10 10 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+      Share via WhatsApp
+    </button>
+  </div>
+</div>
+
+<!-- ══════════════════════════
+     PANEL: SAVED
+══════════════════════════ -->
 <div class="panel" id="panel-saved">
   <div id="saved-list"></div>
 </div>
 
-<!-- ══ SETTINGS ══ -->
+<!-- ══════════════════════════
+     PANEL: SETTINGS
+══════════════════════════ -->
 <div class="panel" id="panel-cfg">
   <div class="card">
     <div class="ctitle"><span class="ico">🎨</span>Theme Colour</div>
     <div class="swatches">
-      <div class="sw sel" style="background:#C9A84C" onclick="setColor('#C9A84C','#9A7A30',this)"></div>
-      <div class="sw" style="background:#2C7BE5" onclick="setColor('#2C7BE5','#1a5cb8',this)"></div>
-      <div class="sw" style="background:#27AE60" onclick="setColor('#27AE60','#1e8449',this)"></div>
-      <div class="sw" style="background:#8E44AD" onclick="setColor('#8E44AD','#6c3483',this)"></div>
-      <div class="sw" style="background:#E74C3C" onclick="setColor('#E74C3C','#c0392b',this)"></div>
-      <div class="sw" style="background:#16A085" onclick="setColor('#16A085','#0e7a63',this)"></div>
+      <div class="sw sel" style="background:#C9A84C" onclick="setColor('#C9A84C','#E8C97A','#9A7A30',this)"></div>
+      <div class="sw" style="background:#2C7BE5" onclick="setColor('#2C7BE5','#5B9FFF','#1a5cb8',this)"></div>
+      <div class="sw" style="background:#27AE60" onclick="setColor('#27AE60','#52C97E','#1e8449',this)"></div>
+      <div class="sw" style="background:#8E44AD" onclick="setColor('#8E44AD','#B06BD3','#6c3483',this)"></div>
+      <div class="sw" style="background:#E74C3C" onclick="setColor('#E74C3C','#FF7B6B','#c0392b',this)"></div>
+      <div class="sw" style="background:#16A085" onclick="setColor('#16A085','#48C9B0','#0e7a63',this)"></div>
     </div>
   </div>
   <div class="card">
     <div class="ctitle"><span class="ico">⚙️</span>Preferences</div>
     <div class="tog-row">
-      <div><div class="tog-lbl">Auto-save invoices</div><div class="tog-desc">Save each invoice locally</div></div>
-      <button class="tog on" onclick="this.classList.toggle('on')"></button>
+      <div><div class="tog-lbl">Auto-save invoices</div><div class="tog-desc">Save each invoice to local storage</div></div>
+      <button class="tog on" id="tog-autosave" onclick="this.classList.toggle('on')"></button>
     </div>
     <div class="tog-row">
       <div><div class="tog-lbl">Default 18% GST</div><div class="tog-desc">Pre-select GST on new invoices</div></div>
       <button class="tog on" onclick="this.classList.toggle('on')"></button>
     </div>
+    <div class="tog-row">
+      <div><div class="tog-lbl">Show watermark on PDF</div><div class="tog-desc">Faint FEABA brand mark on invoice</div></div>
+      <button class="tog on" id="tog-watermark" onclick="this.classList.toggle('on')"></button>
+    </div>
   </div>
-  <button class="btnP" style="width:100%" onclick="toast('✅ Settings saved!')">Save Settings</button>
+  <div class="card">
+    <div class="ctitle"><span class="ico">👤</span>Driver Profile</div>
+    <div class="row">
+      <div class="fg"><label>Driver Name</label><input id="cfg-driver" placeholder="Your name"/></div>
+    </div>
+    <div class="row">
+      <div class="fg"><label>Vehicle Number</label><input id="cfg-vehicle" placeholder="KA64 XXXX"/></div>
+      <div class="fg">
+        <label>Default Cab</label>
+        <select id="cfg-cab">
+          <option>Etios</option><option>Swift Dzire</option><option>Innova</option>
+          <option>Innova Crysta</option><option>Ertiga</option>
+          <option>Tempo Traveller</option><option>Mini Bus</option>
+          <option>Bus</option><option>Auto</option><option>Other</option>
+        </select>
+      </div>
+    </div>
+  </div>
+  <button class="btnP" style="width:100%" onclick="saveSettings()">✅ Save Settings</button>
+</div>
+
+<!-- ═══════════ PDF PROGRESS MODAL ═══════════ -->
+<div id="pdf-modal">
+  <div class="pdf-box">
+    <div class="pdf-ico" id="pdf-ico">📄</div>
+    <div class="pdf-title" id="pdf-title">Generating PDF…</div>
+    <div class="pdf-msg" id="pdf-msg">Please wait while we prepare your invoice in A4 landscape format.</div>
+    <div class="pdf-prog"><div class="pdf-prog-bar" id="pdf-bar"></div></div>
+    <div class="pdf-actions" id="pdf-actions" style="display:none">
+      <button class="pdf-act primary" onclick="triggerDownload()">⬇ Download</button>
+      <button class="pdf-act green" onclick="shareViaWhatsApp()">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="#fff"><path d="M17.472 14.382c-.297-.149-1.758-.867-2.03-.967-.273-.099-.471-.148-.67.15-.197.297-.767.966-.94 1.164-.173.199-.347.223-.644.075-.297-.15-1.255-.463-2.39-1.475-.883-.788-1.48-1.761-1.653-2.059-.173-.297-.018-.458.13-.606.134-.133.298-.347.446-.52.149-.174.198-.298.298-.497.099-.198.05-.371-.025-.52-.075-.149-.669-1.612-.916-2.207-.242-.579-.487-.5-.669-.51-.173-.008-.371-.01-.57-.01-.198 0-.52.074-.792.372-.272.297-1.04 1.016-1.04 2.479 0 1.462 1.065 2.875 1.213 3.074.149.198 2.096 3.2 5.077 4.487.709.306 1.262.489 1.694.625.712.227 1.36.195 1.871.118.571-.085 1.758-.719 2.006-1.413.248-.694.248-1.289.173-1.413-.074-.124-.272-.198-.57-.347z"/><path d="M12 0C5.373 0 0 5.373 0 12c0 2.116.549 4.107 1.51 5.833L.06 23.077a.75.75 0 00.924.924l5.244-1.45A11.95 11.95 0 0012 24c6.627 0 12-5.373 12-12S18.627 0 12 0zm0 22c-1.89 0-3.66-.493-5.19-1.357l-.37-.215-3.838 1.06 1.06-3.838-.215-.37A10 10 0 012 12C2 6.477 6.477 2 12 2s10 4.477 10 10-4.477 10-10 10z"/></svg>
+        WhatsApp
+      </button>
+      <button class="pdf-act secondary" onclick="closePdfModal()">✕ Close</button>
+    </div>
+  </div>
 </div>
 
 <div class="toast" id="toast"></div>
 
+<!-- ═══════════ SCRIPT ═══════════ -->
 <script>
-let items=[], saved=JSON.parse(localStorage.getItem('feaba_v2')||'[]');
+'use strict';
 
-window.onload=()=>{
-  const today=new Date().toISOString().split('T')[0];
-  const due=new Date(); due.setDate(due.getDate()+7);
-  document.getElementById('inv-date').value=today;
-  document.getElementById('due-date').value=due.toISOString().split('T')[0];
-  regenNum(); addItem(); renderSaved();
-};
+/* ── State ── */
+let items = [];
+let saved = JSON.parse(localStorage.getItem('feaba_v3') || '[]');
+let currentPdfBlob = null;
+let currentPdfFilename = '';
+let driverInfo = JSON.parse(localStorage.getItem('feaba_driver') || 'null');
 
-function goTab(n){
-  ['form','prev','saved','cfg'].forEach((t,i)=>{
-    document.getElementById('panel-'+t).classList.toggle('on',t===n);
-    document.querySelectorAll('.tab')[i].classList.toggle('on',t===n);
+/* ══ INIT ══ */
+window.addEventListener('load', () => {
+  const today = new Date().toISOString().split('T')[0];
+  const due = new Date(); due.setDate(due.getDate() + 7);
+  document.getElementById('inv-date').value = today;
+  document.getElementById('due-date').value = due.toISOString().split('T')[0];
+  document.getElementById('journey-date').value = today;
+  regenNum();
+  addItem();
+  renderSaved();
+
+  if (driverInfo) {
+    applyDriverInfo(driverInfo);
+    hideLogin();
+  }
+  // Fix font loading for PDF
+  document.fonts.ready.then(() => {});
+});
+
+/* ══ LOGIN ══ */
+function doLogin() {
+  const name = document.getElementById('l-driver').value.trim();
+  const vehicle = document.getElementById('l-vehicle').value.trim().toUpperCase();
+  const cab = document.getElementById('l-cab').value;
+  if (!name) { toast('⚠️ Please enter your name'); return; }
+  const info = { name, vehicle, cab };
+  localStorage.setItem('feaba_driver', JSON.stringify(info));
+  driverInfo = info;
+  applyDriverInfo(info);
+  hideLogin();
+  toast('👋 Welcome, ' + name + '!');
+}
+
+function skipLogin() {
+  hideLogin();
+  toast('ℹ️ Using default settings');
+}
+
+function hideLogin() {
+  const ov = document.getElementById('login-overlay');
+  ov.style.transition = 'opacity .4s ease';
+  ov.style.opacity = '0';
+  setTimeout(() => ov.style.display = 'none', 420);
+}
+
+function showLogin() {
+  const ov = document.getElementById('login-overlay');
+  ov.style.display = 'flex';
+  ov.style.opacity = '0';
+  requestAnimationFrame(() => {
+    ov.style.transition = 'opacity .3s ease';
+    ov.style.opacity = '1';
   });
-  if(n==='prev') buildPreview();
-  if(n==='saved') renderSaved();
+  if (driverInfo) {
+    document.getElementById('l-driver').value = driverInfo.name || '';
+    document.getElementById('l-vehicle').value = driverInfo.vehicle || '';
+    const cabSel = document.getElementById('l-cab');
+    for (let o of cabSel.options) if (o.value === driverInfo.cab) { cabSel.value = driverInfo.cab; break; }
+  }
 }
-function goPreview(){goTab('prev');}
 
-function regenNum(){
-  document.getElementById('inv-num-display').textContent='FEABA'+Math.floor(Math.random()*9e6+1e6);
+function applyDriverInfo(info) {
+  // Fill trip fields
+  if (info.name) document.getElementById('driver-name').value = info.name;
+  if (info.vehicle) document.getElementById('vehicle-no').value = info.vehicle;
+  if (info.cab) {
+    const sel = document.getElementById('cab-type');
+    for (let o of sel.options) if (o.value === info.cab || o.text === info.cab) { sel.value = o.value; break; }
+  }
+  // Update chip
+  document.getElementById('driver-av').textContent = info.name.charAt(0).toUpperCase();
+  document.getElementById('driver-chip-name').textContent = info.name.split(' ')[0];
+  // Settings
+  document.getElementById('cfg-driver').value = info.name || '';
+  document.getElementById('cfg-vehicle').value = info.vehicle || '';
 }
 
-function addItem(){
-  const id=Date.now();
-  items.push({id,name:'',desc:'',rate:'',qty:1,amt:0});
+/* ══ TABS ══ */
+function goTab(n) {
+  ['form','prev','saved','cfg'].forEach((t, i) => {
+    document.getElementById('panel-' + t).classList.toggle('on', t === n);
+    document.querySelectorAll('.tab')[i].classList.toggle('on', t === n);
+  });
+  if (n === 'prev') buildPreview();
+  if (n === 'saved') renderSaved();
+}
+function goPreview() { goTab('prev'); }
+
+/* ══ INVOICE NUMBER ══ */
+function regenNum() {
+  const n = 'FEABA' + Math.floor(Math.random() * 9e6 + 1e6);
+  document.getElementById('inv-num-display').textContent = n;
+}
+
+/* ══ LINE ITEMS ══ */
+function addItem() {
+  const id = Date.now() + Math.random();
+  items.push({ id, name:'', desc:'', rate:'', qty:1, amt:0 });
   renderItems();
 }
-function removeItem(id){items=items.filter(i=>i.id!==id);renderItems();calcTotals();}
-function renderItems(){
-  document.getElementById('li-container').innerHTML=items.map((it,idx)=>`
+function removeItem(id) {
+  items = items.filter(i => i.id !== id);
+  renderItems(); calcTotals();
+}
+function renderItems() {
+  document.getElementById('li-container').innerHTML = items.map((it, idx) => `
     <div class="li-wrap" id="li${it.id}">
       <div class="li-head">
-        <span class="li-num">${idx+1}</span>
-        ${items.length>1?`<button class="rmBtn" onclick="removeItem(${it.id})">×</button>`:''}
+        <span class="li-num">${idx + 1}</span>
+        ${items.length > 1 ? `<button class="rmBtn" onclick="removeItem(${it.id})">×</button>` : ''}
       </div>
-      <input type="text" placeholder="Item / Service name" value="${esc(it.name)}"
-        oninput="upd(${it.id},'name',this.value)"
-        style="display:block;width:100%;margin-bottom:7px;font-family:'DM Sans',sans-serif;font-size:14px;color:var(--ink);background:var(--white);border:1.5px solid var(--cream3);border-radius:9px;padding:9px 12px;outline:none;box-sizing:border-box"/>
-      <input type="text" placeholder="Description (optional)" value="${esc(it.desc)}"
-        oninput="upd(${it.id},'desc',this.value)"
-        style="display:block;width:100%;margin-bottom:7px;font-family:'DM Sans',sans-serif;font-size:12.5px;color:var(--ink3);background:var(--cream);border:1.5px solid var(--cream3);border-radius:9px;padding:7px 12px;outline:none;box-sizing:border-box"/>
+      <input class="li-input" type="text" placeholder="Service / Item name" value="${esc(it.name)}"
+        oninput="upd(${it.id},'name',this.value)"/>
+      <input class="li-input li-desc" type="text" placeholder="Description (optional)" value="${esc(it.desc)}"
+        oninput="upd(${it.id},'desc',this.value)"/>
       <div style="display:flex;gap:8px">
-        <div class="fg"><label>Rate (₹)</label><input type="number" placeholder="0.00" value="${it.rate}" min="0" step="0.01" oninput="upd(${it.id},'rate',this.value)" style="font-family:'DM Mono',monospace"/></div>
-        <div class="fg"><label>Qty</label><input type="number" placeholder="1" value="${it.qty}" min="1" oninput="upd(${it.id},'qty',this.value)"/></div>
-        <div class="fg"><label>Amount (₹)</label><input type="number" readonly value="${it.amt.toFixed(2)}" id="amt${it.id}" style="background:var(--cream2);font-family:'DM Mono',monospace;color:var(--gold-d);font-weight:600"/></div>
+        <div class="fg">
+          <label>Rate (₹)</label>
+          <input type="number" class="li-input" style="margin-bottom:0;font-family:'JetBrains Mono',monospace;font-size:13px"
+            placeholder="0.00" value="${it.rate}" min="0" step="0.01" oninput="upd(${it.id},'rate',this.value)"/>
+        </div>
+        <div class="fg">
+          <label>Qty</label>
+          <input type="number" class="li-input" style="margin-bottom:0"
+            placeholder="1" value="${it.qty}" min="1" oninput="upd(${it.id},'qty',this.value)"/>
+        </div>
+        <div class="fg">
+          <label>Amount (₹)</label>
+          <input type="number" class="li-input" style="margin-bottom:0;background:var(--cream2);color:var(--gold-d);font-weight:600;font-family:'JetBrains Mono',monospace;font-size:13px"
+            readonly value="${it.amt.toFixed(2)}" id="amt${it.id}"/>
+        </div>
       </div>
     </div>`).join('');
 }
-function esc(s){return(s||'').replace(/"/g,'&quot;');}
-function upd(id,f,v){
-  const it=items.find(i=>i.id===id);if(!it)return;
-  it[f]=v;
-  if(f==='rate'||f==='qty'){
-    it.amt=(parseFloat(it.rate)||0)*(parseFloat(it.qty)||0);
-    const el=document.getElementById('amt'+id);if(el)el.value=it.amt.toFixed(2);
+function esc(s) { return (s || '').replace(/&/g,'&amp;').replace(/"/g,'&quot;').replace(/</g,'&lt;'); }
+function unesc(s) { return (s || '').replace(/&amp;/g,'&').replace(/&quot;/g,'"').replace(/&lt;/g,'<'); }
+function upd(id, f, v) {
+  const it = items.find(i => i.id === id); if (!it) return;
+  it[f] = v;
+  if (f === 'rate' || f === 'qty') {
+    it.amt = (parseFloat(it.rate) || 0) * (parseFloat(it.qty) || 0);
+    const el = document.getElementById('amt' + id);
+    if (el) el.value = it.amt.toFixed(2);
   }
   calcTotals();
 }
 
-function calcTotals(){
-  const sub=items.reduce((s,i)=>s+i.amt,0);
-  const dp=parseFloat(document.getElementById('disc').value)||0;
-  const gp=parseFloat(document.getElementById('gst').value)||0;
-  const da=sub*dp/100,after=sub-da,ga=after*gp/100,total=after+ga;
-  document.getElementById('t-sub').textContent=fmt(sub);
-  document.getElementById('t-total').textContent=fmt(total);
-  document.getElementById('t-words').textContent=total>0?'Rupees '+n2w(Math.round(total))+' Only':'—';
-  const dr=document.getElementById('tr-disc'),gr=document.getElementById('tr-gst');
-  if(dp>0){dr.style.display='flex';document.getElementById('t-disc').textContent='-'+fmt(da);}else dr.style.display='none';
-  if(gp>0){gr.style.display='flex';document.getElementById('t-gst-lbl').textContent=`GST (${gp}%)`;document.getElementById('t-gst').textContent=fmt(ga);}else gr.style.display='none';
+/* ══ TOTALS ══ */
+function calcTotals() {
+  const { sub, da, ga, total, dp, gp } = getTotals();
+  document.getElementById('t-sub').textContent = fmt(sub);
+  document.getElementById('t-total').textContent = fmt(total);
+  document.getElementById('t-words').textContent = total > 0 ? 'Rupees ' + n2w(Math.round(total)) + ' Only' : '—';
+  const dr = document.getElementById('tr-disc'), gr = document.getElementById('tr-gst');
+  if (dp > 0) { dr.style.display = 'flex'; document.getElementById('t-disc').textContent = '-' + fmt(da); }
+  else dr.style.display = 'none';
+  if (gp > 0) { gr.style.display = 'flex'; document.getElementById('t-gst-lbl').textContent = `GST (${gp}%)`; document.getElementById('t-gst').textContent = fmt(ga); }
+  else gr.style.display = 'none';
 }
-const fmt=n=>'₹'+n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g,',');
-const gv=id=>document.getElementById(id)?.value||'';
 
-function buildPreview(){
-  const coName=gv('co-name'),coAddr1=gv('co-addr1'),coAddr2=gv('co-addr2'),coPhone=gv('co-phone'),coEmail=gv('co-email'),coGst=gv('co-gstin');
-  const num=document.getElementById('inv-num-display').textContent;
-  document.getElementById('p-co-name').textContent=coName||'FEABA TRAVELS';
-  let coSub=[coAddr1,coAddr2].filter(Boolean).join(', ');
-  if(coPhone)coSub+='<br/>📞 '+coPhone;
-  if(coEmail)coSub+=' &nbsp;✉ '+coEmail;
-  if(coGst)coSub+='<br/>GSTIN: '+coGst;
-  document.getElementById('p-co-sub').innerHTML=coSub;
-  document.getElementById('p-num').textContent='#: '+num;
-  document.getElementById('p-bar-num').textContent='#'+num;
-  document.getElementById('p-bar-co').textContent=(coName||'FEABA Travels')+' — Trusted Ride Partner';
-  document.getElementById('p-idate').textContent=fmtD(gv('inv-date'))||'—';
-  document.getElementById('p-ddate').textContent=fmtD(gv('due-date'))||'—';
-  document.getElementById('p-terms').textContent=gv('inv-terms');
-  const cabT=gv('cab-type'),vNo=gv('vehicle-no'),dName=gv('driver-name');
-  document.getElementById('p-cab').textContent=[cabT,vNo].filter(Boolean).join(' / ')||'—';
-  const jDate=gv('journey-date'),from=gv('trip-from'),to=gv('trip-to');
-  let jTxt=[from,to].filter(Boolean).join(' → ');if(jDate)jTxt+=' ('+fmtD(jDate)+')';
-  document.getElementById('p-journey').textContent=jTxt||'—';
-  const cName=gv('cust-name'),cA1=gv('cust-addr1'),cA2=gv('cust-addr2'),cPh=gv('cust-phone'),cEm=gv('cust-email'),cG=gv('cust-gstin');
-  document.getElementById('p-cust-name').textContent=cName||'—';
-  let cd=[cA1,cA2].filter(Boolean).join(', ');
-  if(cPh)cd+='<br/>📞 '+cPh;
-  if(cEm)cd+=' &nbsp;✉ '+cEm;
-  if(cG)cd+='<br/>GSTIN: '+cG;
-  document.getElementById('p-cust-detail').innerHTML=cd||'—';
-  let th='';
-  if(dName)th+='<b>Driver:</b> '+dName+'<br/>';
-  if(vNo)th+='<b>Vehicle:</b> '+vNo+'<br/>';
-  if(cabT)th+='<b>Cab Type:</b> '+cabT+'<br/>';
-  if(from)th+='<b>From:</b> '+from+'<br/>';
-  if(to)th+='<b>To:</b> '+to+'<br/>';
-  const km=gv('km'),pax=gv('pax');
-  if(km)th+='<b>Distance:</b> '+km+' km<br/>';
-  if(pax)th+='<b>Passengers:</b> '+pax+'<br/>';
-  if(jDate)th+='<b>Journey Date:</b> '+fmtD(jDate);
-  document.getElementById('p-trip-detail').innerHTML=th||'—';
-  document.getElementById('p-tbody').innerHTML=items.map((it,i)=>`
+function getTotals() {
+  const sub = items.reduce((s, i) => s + i.amt, 0);
+  const dp = parseFloat(gv('disc')) || 0;
+  const gp = parseFloat(document.getElementById('gst').value) || 0;
+  const da = sub * dp / 100, after = sub - da, ga = after * gp / 100, total = after + ga;
+  return { sub, dp, gp, da, ga, total };
+}
+
+const fmt = n => '₹' + n.toFixed(2).replace(/\B(?=(\d{3})+(?!\d))/g, ',');
+const gv = id => document.getElementById(id)?.value || '';
+
+/* ══ BUILD PREVIEW ══ */
+function buildPreview() {
+  const coName = gv('co-name'), coAddr1 = gv('co-addr1'), coAddr2 = gv('co-addr2');
+  const coPhone = gv('co-phone'), coEmail = gv('co-email'), coGst = gv('co-gstin');
+  const num = document.getElementById('inv-num-display').textContent;
+
+  document.getElementById('p-co-name').textContent = coName || 'FEABA TRAVELS';
+  let coSub = [coAddr1, coAddr2].filter(Boolean).join(', ');
+  if (coPhone) coSub += '<br/>📞 ' + coPhone;
+  if (coEmail) coSub += ' &nbsp;✉ ' + coEmail;
+  if (coGst) coSub += '<br/>GSTIN: ' + coGst;
+  document.getElementById('p-co-sub').innerHTML = coSub;
+
+  document.getElementById('p-num').textContent = num;
+  document.getElementById('p-bar-num').textContent = '#' + num;
+  document.getElementById('p-bar-co').textContent = (coName || 'FEABA Travels') + ' — Trusted Ride Partner';
+
+  document.getElementById('p-idate').textContent = fmtD(gv('inv-date')) || '—';
+  document.getElementById('p-ddate').textContent = fmtD(gv('due-date')) || '—';
+  document.getElementById('p-terms').textContent = gv('inv-terms');
+
+  const cabT = gv('cab-type'), vNo = gv('vehicle-no'), dName = gv('driver-name');
+  document.getElementById('p-cab').textContent = [cabT, vNo].filter(Boolean).join(' / ') || '—';
+  document.getElementById('p-jdate').textContent = fmtD(gv('journey-date')) || '—';
+
+  const cName = gv('cust-name'), cA1 = gv('cust-addr1'), cA2 = gv('cust-addr2');
+  const cPh = gv('cust-phone'), cEm = gv('cust-email'), cG = gv('cust-gstin');
+  document.getElementById('p-cust-name').textContent = cName || '—';
+  let cd = [cA1, cA2].filter(Boolean).join(', ');
+  if (cPh) cd += '<br/>📞 ' + cPh;
+  if (cEm) cd += ' &nbsp;✉ ' + cEm;
+  if (cG) cd += '<br/>GSTIN: ' + cG;
+  document.getElementById('p-cust-detail').innerHTML = cd || '—';
+
+  let th = '';
+  if (dName) th += '<b>Driver:</b> ' + dName + '<br/>';
+  if (cabT) th += '<b>Cab Type:</b> ' + cabT + '<br/>';
+  if (vNo) th += '<b>Vehicle No:</b> ' + vNo + '<br/>';
+  const from = gv('trip-from'), to = gv('trip-to'), km = gv('km'), pax = gv('pax');
+  if (from) th += '<b>From:</b> ' + from + '<br/>';
+  if (to) th += '<b>To:</b> ' + to + '<br/>';
+  if (km) th += '<b>Distance:</b> ' + km + ' km<br/>';
+  if (pax) th += '<b>Passengers:</b> ' + pax;
+  document.getElementById('p-trip-detail').innerHTML = th || '—';
+
+  document.getElementById('p-tbody').innerHTML = items.map((it, i) => `
     <tr>
-      <td>${i+1}</td>
-      <td><div class="td-name">${it.name||'Item'}</div>${it.desc?'<div class="td-desc">'+it.desc+'</div>':''}</td>
-      <td class="r">${(parseFloat(it.rate)||0).toFixed(2)}</td>
+      <td>${i + 1}</td>
+      <td><div class="td-name">${it.name || 'Item'}</div>${it.desc ? '<div class="td-desc">' + it.desc + '</div>' : ''}</td>
+      <td class="r">${(parseFloat(it.rate) || 0).toFixed(2)}</td>
       <td class="r">${it.qty}</td>
       <td class="r">${it.amt.toFixed(2)}</td>
     </tr>`).join('');
-  const sub=items.reduce((s,i)=>s+i.amt,0);
-  const dp=parseFloat(gv('disc'))||0,gp=parseFloat(document.getElementById('gst').value)||0;
-  const da=sub*dp/100,after=sub-da,ga=after*gp/100,total=after+ga;
-  document.getElementById('p-sub').textContent=fmt(sub);
-  document.getElementById('p-total').textContent=fmt(total);
-  document.getElementById('p-balance').textContent=fmt(total);
-  document.getElementById('p-words').textContent=total>0?'Rupees '+n2w(Math.round(total))+' Only':'—';
-  const pdr=document.getElementById('p-disc-row'),pgr=document.getElementById('p-gst-row');
-  if(dp>0){pdr.style.display='flex';document.getElementById('p-disc-lbl').textContent='Discount ('+dp+'%)';document.getElementById('p-disc-val').textContent='-'+fmt(da);}else pdr.style.display='none';
-  if(gp>0){pgr.style.display='flex';document.getElementById('p-gst-lbl').textContent='GST ('+gp+'%)';document.getElementById('p-gst-val').textContent=fmt(ga);}else pgr.style.display='none';
-  document.getElementById('p-notes').textContent=gv('inv-notes');
-  document.getElementById('p-signatory').textContent=gv('signatory')||'FEABA Travels';
+
+  const { sub, da, ga, total, dp, gp } = getTotals();
+  document.getElementById('p-sub').textContent = fmt(sub);
+  document.getElementById('p-total').textContent = fmt(total);
+  document.getElementById('p-balance').textContent = fmt(total);
+  document.getElementById('p-words').textContent = total > 0 ? 'Rupees ' + n2w(Math.round(total)) + ' Only' : '—';
+
+  const pdr = document.getElementById('p-disc-row'), pgr = document.getElementById('p-gst-row');
+  if (dp > 0) { pdr.style.display = 'flex'; document.getElementById('p-disc-lbl').textContent = 'Discount (' + dp + '%)'; document.getElementById('p-disc-val').textContent = '-' + fmt(da); }
+  else pdr.style.display = 'none';
+  if (gp > 0) { pgr.style.display = 'flex'; document.getElementById('p-gst-lbl').textContent = 'GST (' + gp + '%)'; document.getElementById('p-gst-val').textContent = fmt(ga); }
+  else pgr.style.display = 'none';
+
+  document.getElementById('p-notes').textContent = gv('inv-notes');
+  document.getElementById('p-signatory').textContent = gv('signatory') || 'FEABA Travels';
+
+  // Watermark visibility
+  const wm = document.querySelector('#invoice-doc .watermark');
+  if (wm) wm.style.display = document.getElementById('tog-watermark')?.classList.contains('on') ? 'block' : 'none';
 }
 
-function dlPDF(){
+/* ══ PDF GENERATION — html2canvas + jsPDF ══ */
+let pdfReadyBlob = null;
+
+async function dlPDF() {
   buildPreview();
-  const el=document.getElementById('invoice-doc');
-  const num=document.getElementById('inv-num-display').textContent;
-  toast('⏳ Generating PDF…');
-  html2pdf().set({
-    margin:[5,5,5,5],
-    filename:num+'.pdf',
-    image:{type:'jpeg',quality:0.99},
-    html2canvas:{scale:3,useCORS:true,logging:false,letterRendering:true},
-    jsPDF:{unit:'mm',format:'a4',orientation:'landscape'}
-  }).from(el).save().then(()=>toast('✅ PDF saved as '+num+'.pdf'));
+  openPdfModal('⏳ Rendering invoice…', 0);
+
+  const el = document.getElementById('invoice-doc');
+  const num = document.getElementById('inv-num-display').textContent;
+  currentPdfFilename = num + '.pdf';
+
+  // Hide border for capture
+  const origBorder = el.style.border;
+  el.style.border = 'none';
+
+  try {
+    setProgress(15);
+    await new Promise(r => setTimeout(r, 80));
+
+    setProgress(30);
+    // Capture at 3× for sharpness
+    const canvas = await html2canvas(el, {
+      scale: 3,
+      useCORS: true,
+      logging: false,
+      backgroundColor: '#ffffff',
+      allowTaint: true,
+      imageTimeout: 0,
+      windowWidth: el.offsetWidth,
+      windowHeight: el.offsetHeight
+    });
+
+    setProgress(65);
+    el.style.border = origBorder;
+
+    const imgData = canvas.toDataURL('image/jpeg', 0.97);
+
+    // A4 landscape: 297 × 210 mm
+    const { jsPDF } = window.jspdf;
+    const pdf = new jsPDF({ orientation: 'landscape', unit: 'mm', format: 'a4' });
+    const pageW = 297, pageH = 210;
+    const margin = 8;
+    const usableW = pageW - margin * 2;
+    const usableH = pageH - margin * 2;
+
+    // Calculate aspect to fit
+    const imgW = canvas.width, imgH = canvas.height;
+    const ratio = Math.min(usableW / imgW, usableH / imgH);
+    const drawW = imgW * ratio, drawH = imgH * ratio;
+    const offsetX = margin + (usableW - drawW) / 2;
+    const offsetY = margin + (usableH - drawH) / 2;
+
+    pdf.addImage(imgData, 'JPEG', offsetX, offsetY, drawW, drawH);
+
+    setProgress(85);
+
+    // Add invoice number as text in PDF metadata
+    pdf.setProperties({ title: 'Invoice ' + num, author: gv('co-name') || 'FEABA Travels', subject: 'Tax Invoice' });
+
+    setProgress(95);
+    await new Promise(r => setTimeout(r, 100));
+
+    pdfReadyBlob = pdf.output('blob');
+    currentPdfBlob = pdfReadyBlob;
+
+    setProgress(100);
+    setPdfDone(num);
+
+  } catch(err) {
+    el.style.border = origBorder;
+    closePdfModal();
+    toast('❌ PDF error: ' + err.message);
+    console.error(err);
+  }
 }
 
-function saveInv(){
-  const sub=items.reduce((s,i)=>s+i.amt,0);
-  const dp=parseFloat(gv('disc'))||0,gp=parseFloat(document.getElementById('gst').value)||0;
-  const total=(sub-sub*dp/100)*(1+gp/100);
-  saved.unshift({id:Date.now(),num:document.getElementById('inv-num-display').textContent,client:gv('cust-name')||'Unknown',date:gv('inv-date'),total,status:'due'});
-  localStorage.setItem('feaba_v2',JSON.stringify(saved));
+function openPdfModal(msg, prog) {
+  document.getElementById('pdf-modal').classList.add('open');
+  document.getElementById('pdf-title').textContent = 'Generating PDF…';
+  document.getElementById('pdf-msg').textContent = msg;
+  document.getElementById('pdf-ico').textContent = '📄';
+  document.getElementById('pdf-actions').style.display = 'none';
+  setProgress(prog);
+}
+function setProgress(p) {
+  document.getElementById('pdf-bar').style.width = p + '%';
+}
+function setPdfDone(num) {
+  document.getElementById('pdf-ico').textContent = '✅';
+  document.getElementById('pdf-title').textContent = 'PDF Ready!';
+  document.getElementById('pdf-msg').textContent = num + '.pdf — A4 Landscape, print-ready';
+  document.getElementById('pdf-actions').style.display = 'flex';
+}
+function closePdfModal() {
+  document.getElementById('pdf-modal').classList.remove('open');
+}
+function triggerDownload() {
+  if (!pdfReadyBlob) return;
+  const url = URL.createObjectURL(pdfReadyBlob);
+  const a = document.createElement('a');
+  a.href = url; a.download = currentPdfFilename;
+  document.body.appendChild(a); a.click();
+  setTimeout(() => { URL.revokeObjectURL(url); a.remove(); }, 1000);
+  toast('✅ Saved: ' + currentPdfFilename);
+}
+
+/* ══ WHATSAPP SHARE ══ */
+async function shareViaWhatsApp() {
+  if (!pdfReadyBlob) { toast('⚠️ Generate PDF first'); return; }
+
+  // Try Web Share API (mobile)
+  if (navigator.share && navigator.canShare) {
+    const file = new File([pdfReadyBlob], currentPdfFilename, { type: 'application/pdf' });
+    if (navigator.canShare({ files: [file] })) {
+      try {
+        await navigator.share({ files: [file], title: currentPdfFilename, text: buildWhatsAppMsg() });
+        toast('✅ Shared!'); closePdfModal(); return;
+      } catch(e) { if (e.name !== 'AbortError') console.warn(e); }
+    }
+  }
+  // Fallback: open WhatsApp with text message
+  openWhatsAppText();
+}
+
+function shareWhatsApp() {
+  if (!pdfReadyBlob) {
+    // Generate PDF first then share
+    dlPDF().then(() => {});
+    toast('⏳ Preparing PDF for WhatsApp…');
+    return;
+  }
+  shareViaWhatsApp();
+}
+
+function buildWhatsAppMsg() {
+  const num = document.getElementById('inv-num-display').textContent;
+  const { total } = getTotals();
+  const cust = gv('cust-name') || 'Customer';
+  const from = gv('trip-from'), to = gv('trip-to');
+  return `🚖 *FEABA Travels Invoice*\n\nInvoice No: *${num}*\nClient: *${cust}*${from ? '\nTrip: ' + from + ' → ' + to : ''}\n*Total: ${fmt(total)}*\n\nPlease find the invoice PDF attached.\n\nThank you for choosing FEABA Travels! 🙏`;
+}
+
+function openWhatsAppText() {
+  // Also trigger PDF download
+  triggerDownload();
+  const msg = buildWhatsAppMsg();
+  const waUrl = 'https://wa.me/?text=' + encodeURIComponent(msg);
+  window.open(waUrl, '_blank');
+  toast('📲 PDF downloaded — attach in WhatsApp');
+  closePdfModal();
+}
+
+/* ══ SAVE ══ */
+function saveInv() {
+  buildPreview();
+  const { total } = getTotals();
+  const num = document.getElementById('inv-num-display').textContent;
+  const inv = {
+    id: Date.now(), num, client: gv('cust-name') || 'Unknown',
+    date: gv('inv-date'), total, status: 'due',
+    driver: gv('driver-name'), vehicle: gv('vehicle-no'),
+    from: gv('trip-from'), to: gv('trip-to')
+  };
+  saved.unshift(inv);
+  localStorage.setItem('feaba_v3', JSON.stringify(saved));
   toast('💾 Invoice saved!');
 }
 
-function renderSaved(){
-  const el=document.getElementById('saved-list');
-  if(!saved.length){el.innerHTML='<div class="empty"><span>📂</span><p>No saved invoices yet.</p></div>';return;}
-  el.innerHTML=saved.map(s=>`
+function renderSaved() {
+  const el = document.getElementById('saved-list');
+  if (!saved.length) {
+    el.innerHTML = '<div class="empty"><div class="ei">📂</div><p>No saved invoices yet.<br/>Create one to get started!</p></div>';
+    return;
+  }
+  el.innerHTML = saved.map(s => `
     <div class="si">
-      <div><div class="si-num">${s.num}</div><div class="si-client">${s.client}</div><div class="si-date">${fmtD(s.date)}</div></div>
-      <div style="text-align:right">
+      <div>
+        <div class="si-num">${s.num}</div>
+        <div class="si-client">${s.client}</div>
+        <div class="si-date">${fmtD(s.date)}${s.from ? ' · ' + s.from + ' → ' + s.to : ''}</div>
+        ${s.driver ? '<div class="si-date">🚗 ' + (s.driver) + (s.vehicle ? ' · ' + s.vehicle : '') + '</div>' : ''}
+      </div>
+      <div style="text-align:right;flex-shrink:0">
         <div class="si-amt">${fmt(s.total)}</div>
-        <div class="si-st ${s.status==='paid'?'paid':'due'}" onclick="toggleSt(${s.id},event)">${s.status==='paid'?'✅ Paid':'⏳ Due'}</div>
+        <div class="si-st ${s.status === 'paid' ? 'paid' : 'due'}" onclick="toggleSt(${s.id},event)">
+          ${s.status === 'paid' ? '✅ Paid' : '⏳ Due'}
+        </div>
       </div>
     </div>`).join('');
 }
-function toggleSt(id,e){
+
+function toggleSt(id, e) {
   e.stopPropagation();
-  const s=saved.find(x=>x.id===id);if(!s)return;
-  s.status=s.status==='paid'?'due':'paid';
-  localStorage.setItem('feaba_v2',JSON.stringify(saved));renderSaved();
+  const s = saved.find(x => x.id === id); if (!s) return;
+  s.status = s.status === 'paid' ? 'due' : 'paid';
+  localStorage.setItem('feaba_v3', JSON.stringify(saved));
+  renderSaved();
 }
 
-function clearForm(){
-  if(!confirm('Clear all form data?'))return;
-  items=[];addItem();
-  ['cust-name','cust-addr1','cust-addr2','cust-phone','cust-email','cust-gstin','trip-from','trip-to','km','pax','inv-ref','driver-name','vehicle-no'].forEach(id=>{const el=document.getElementById(id);if(el)el.value='';});
-  document.getElementById('disc').value=0;
-  document.getElementById('gst').value=18;
-  document.getElementById('inv-notes').value='Thanks for your business. Please pay within the due date.';
-  regenNum();calcTotals();toast('🗑 Form cleared');
+/* ══ CLEAR FORM ══ */
+function clearForm() {
+  if (!confirm('Clear all form data?')) return;
+  items = []; addItem();
+  ['cust-name','cust-addr1','cust-addr2','cust-phone','cust-email','cust-gstin',
+   'trip-from','trip-to','km','pax','inv-ref'].forEach(id => {
+    const el = document.getElementById(id); if (el) el.value = '';
+  });
+  // Re-apply driver info
+  if (driverInfo) applyDriverInfo(driverInfo);
+  document.getElementById('disc').value = 0;
+  document.getElementById('gst').value = 18;
+  document.getElementById('inv-notes').value = 'Thanks for your business. Please pay within the due date.';
+  const today = new Date().toISOString().split('T')[0];
+  document.getElementById('journey-date').value = today;
+  regenNum(); calcTotals(); toast('🗑 Form cleared');
 }
 
-function fmtD(s){if(!s)return'';const d=new Date(s+'T00:00:00');return d.toLocaleDateString('en-IN',{day:'2-digit',month:'short',year:'numeric'});}
-function toast(msg){const t=document.getElementById('toast');t.textContent=msg;t.classList.add('show');setTimeout(()=>t.classList.remove('show'),2600);}
-function setColor(g,gd,el){document.documentElement.style.setProperty('--gold',g);document.documentElement.style.setProperty('--gold-d',gd);document.querySelectorAll('.sw').forEach(s=>s.classList.remove('sel'));el.classList.add('sel');toast('🎨 Theme updated!');}
+/* ══ SETTINGS ══ */
+function saveSettings() {
+  const name = document.getElementById('cfg-driver').value.trim();
+  const vehicle = document.getElementById('cfg-vehicle').value.trim().toUpperCase();
+  const cab = document.getElementById('cfg-cab').value;
+  if (name || vehicle) {
+    const info = { name: name || (driverInfo?.name||''), vehicle: vehicle || (driverInfo?.vehicle||''), cab };
+    localStorage.setItem('feaba_driver', JSON.stringify(info));
+    driverInfo = info;
+    applyDriverInfo(info);
+  }
+  toast('✅ Settings saved!');
+}
 
-function n2w(n){
-  if(!n)return'Zero';
-  const o=['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten','Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
-  const t=['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
-  function h(x){return x<20?o[x]:x<100?t[Math.floor(x/10)]+(x%10?' '+o[x%10]:''):o[Math.floor(x/100)]+' Hundred'+(x%100?' '+h(x%100):'');}
-  let r='';
-  if(n>=10000000){r+=h(Math.floor(n/10000000))+' Crore ';n%=10000000;}
-  if(n>=100000){r+=h(Math.floor(n/100000))+' Lakh ';n%=100000;}
-  if(n>=1000){r+=h(Math.floor(n/1000))+' Thousand ';n%=1000;}
-  if(n>0)r+=h(n);
+/* ══ THEME ══ */
+function setColor(g, gl, gd, el) {
+  document.documentElement.style.setProperty('--gold', g);
+  document.documentElement.style.setProperty('--gold-l', gl);
+  document.documentElement.style.setProperty('--gold-d', gd);
+  document.querySelectorAll('.sw').forEach(s => s.classList.remove('sel'));
+  el.classList.add('sel');
+  toast('🎨 Theme updated!');
+}
+
+/* ══ HELPERS ══ */
+function fmtD(s) {
+  if (!s) return '';
+  const d = new Date(s + 'T00:00:00');
+  return d.toLocaleDateString('en-IN', { day:'2-digit', month:'short', year:'numeric' });
+}
+function toast(msg) {
+  const t = document.getElementById('toast');
+  t.textContent = msg; t.classList.add('show');
+  clearTimeout(t._timer);
+  t._timer = setTimeout(() => t.classList.remove('show'), 2800);
+}
+
+/* ══ NUMBER TO WORDS ══ */
+function n2w(n) {
+  if (!n) return 'Zero';
+  const o = ['','One','Two','Three','Four','Five','Six','Seven','Eight','Nine','Ten',
+             'Eleven','Twelve','Thirteen','Fourteen','Fifteen','Sixteen','Seventeen','Eighteen','Nineteen'];
+  const t = ['','','Twenty','Thirty','Forty','Fifty','Sixty','Seventy','Eighty','Ninety'];
+  function h(x) {
+    return x < 20 ? o[x] : x < 100 ? t[Math.floor(x/10)] + (x%10 ? ' '+o[x%10] : '') :
+      o[Math.floor(x/100)] + ' Hundred' + (x%100 ? ' '+h(x%100) : '');
+  }
+  let r = '';
+  if (n >= 10000000) { r += h(Math.floor(n/10000000)) + ' Crore '; n %= 10000000; }
+  if (n >= 100000)   { r += h(Math.floor(n/100000)) + ' Lakh '; n %= 100000; }
+  if (n >= 1000)     { r += h(Math.floor(n/1000)) + ' Thousand '; n %= 1000; }
+  if (n > 0) r += h(n);
   return r.trim();
 }
 </script>
